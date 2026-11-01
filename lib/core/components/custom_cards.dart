@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:time_verse/core/components/custom_button.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class PhaseCard extends StatelessWidget {
@@ -55,7 +57,7 @@ class PhaseCard extends StatelessWidget {
                       : const Color(0xFF373F4B),
                   ),
                 ),
-                SizedBox(height: 5.h),
+                AppSpacing.h5,
                 Text(
                   subtitle,
                   style: GoogleFonts.outfit(
@@ -66,16 +68,16 @@ class PhaseCard extends StatelessWidget {
                       : const Color(0xFF373F4B),
                   ),
                 ),
-                SizedBox(height: 10.h),
+                AppSpacing.h10,
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SvgPicture.asset(
-                      'assets/icons/subscription_bullet.svg',
+                      IconAssets.subscriptionBullet,
                       width: 16.w,
                       height: 16.h,
                     ),
-                    SizedBox(width: 8.w),
+                    AppSpacing.w8,
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,7 +97,7 @@ class PhaseCard extends StatelessWidget {
                                         : const Color(0xFF373F4B),
                                   ),
                                 ),
-                                SizedBox(height: 4.h),
+                                AppSpacing.h4,
                                 Text(
                                   item['details'],
                                   style: GoogleFonts.outfit(
@@ -139,7 +141,7 @@ if (buttonText != null)
           top: 1.h,
           right: 1.w,
           child: SvgPicture.asset(
-            'assets/icons/corner_icon.svg',
+            IconAssets.cornerIcon,
             width: 80.w,
             height: 80.h,
           ),

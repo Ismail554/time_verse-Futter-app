@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:time_verse/config/app_route/nav_config.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/config/services/alerm_service.dart';
 import 'package:time_verse/config/services/google_service.dart';
 import 'package:time_verse/config/services/user_session.dart';
@@ -262,8 +263,8 @@ class HomeController extends ChangeNotifier {
         assetData = await rootBundle.load(bgAssetPath);
       } catch (_) {
         final fallbackPath = Theme.of(context).brightness == Brightness.dark
-            ? 'assets/images/container_bgimg.png'
-            : 'assets/images/container_bgimg_light.png';
+            ? ImageAssets.containerBgImg
+            : ImageAssets.containerBgImgLight;
         assetData = await rootBundle.load(fallbackPath);
       }
 

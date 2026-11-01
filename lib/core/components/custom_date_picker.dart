@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 class CustomDatePickerDialog extends StatefulWidget {
   final DateTime initialDate;
@@ -65,7 +66,7 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 4.h),
+                AppSpacing.h4,
                 Text(
                   DateFormat('EEE, MMMM d').format(_temporarySelectedDay),
                   style: GoogleFonts.outfit(
@@ -166,7 +167,7 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
                     style: GoogleFonts.outfit(color: const Color(0xFFF5B301), fontWeight: FontWeight.w600),
                   ),
                 ),
-                SizedBox(width: 8.w),
+                AppSpacing.w8,
                 TextButton(
                   onPressed: () => Navigator.pop(context, _temporarySelectedDay),
                   child: Text(

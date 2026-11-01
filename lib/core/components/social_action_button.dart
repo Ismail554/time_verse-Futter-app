@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 class SocialAuthButton extends StatelessWidget {
   final String text;
@@ -50,7 +51,7 @@ class SocialAuthButton extends StatelessWidget {
                       height: 24.h,
                       child: icon,
                     ),
-                    SizedBox(width: 16.w),
+                    AppSpacing.w16,
                     Text(
                       text,
                       style: GoogleFonts.outfit(

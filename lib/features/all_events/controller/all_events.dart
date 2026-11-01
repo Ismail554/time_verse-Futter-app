@@ -2,6 +2,7 @@
 
 import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:go_router/go_router.dart';
 import 'package:time_verse/config/app_route/nav_config.dart';
 import 'package:time_verse/config/services/alerm_notification_service.dart';
@@ -203,7 +204,7 @@ class AllEventsController extends ChangeNotifier {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const CircularProgressIndicator(),
-                    const SizedBox(height: 12),
+                    AppSpacing.h12,
                     Text(
                       "Deleting...\n${elapsed.inSeconds}s",
                       textAlign: TextAlign.center,

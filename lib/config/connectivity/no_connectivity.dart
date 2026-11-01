@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 class NoInternetWidget extends StatelessWidget {
   const NoInternetWidget({super.key});
@@ -13,7 +14,7 @@ class NoInternetWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.wifi_off, color: Colors.red, size: 80.sp),
-            SizedBox(height: 24.h),
+            AppSpacing.h24,
             Text(
               'No Internet Connection',
               style: TextStyle(
@@ -22,7 +23,7 @@ class NoInternetWidget extends StatelessWidget {
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 8.h),
+            AppSpacing.h8,
             Text(
               'Please check your network settings.',
               style: TextStyle(

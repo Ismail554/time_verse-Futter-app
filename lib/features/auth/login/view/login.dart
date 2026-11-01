@@ -13,6 +13,8 @@ import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_dialogue.dart';
 import 'package:time_verse/core/components/custom_input_field.dart';
 import 'package:time_verse/core/components/social_action_button.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/auth/login/controller/login_controller.dart';
 import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
@@ -30,8 +32,8 @@ class LoginPage extends StatelessWidget {
     });
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final String logoAsset = isDarkMode
-      ? 'assets/images/logo.png' 
-      : 'assets/images/logo_light.png';
+      ? ImageAssets.logo 
+      : ImageAssets.logoLight;
     final Color secondaryTextColor = isDarkMode 
       ? AppColors.fourth_color 
       : AppColors.heading_color;
@@ -51,7 +53,7 @@ class LoginPage extends StatelessWidget {
                   height: 124.h,
                 ),
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Center(
                 child: Text(
                   'Welcome Back',
@@ -62,7 +64,7 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Center(
                 child: Text(
                   'Sign in to continue organizing amazing activities',
@@ -74,7 +76,7 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
                 decoration: BoxDecoration(
@@ -93,7 +95,7 @@ class LoginPage extends StatelessWidget {
                       isPassword: false,
                       fontSize: 12,
                     ),
-                    SizedBox(height: 30.h),
+                    AppSpacing.h30,
                     CustomInputField(
                       label: 'Password', // Removed the '*' to match image
                       hintText: 'Enter your password',
@@ -101,7 +103,7 @@ class LoginPage extends StatelessWidget {
                       isPassword: true,
                       fontSize: 12,
                     ),
-                    SizedBox(height: 20.h),
+                    AppSpacing.h20,
                     Consumer<LoginController>(
                       builder: (context, controller, _) => Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -120,7 +122,7 @@ class LoginPage extends StatelessWidget {
                                   inactiveTrackColor: Colors.grey.shade700,
                                 ),
                               ),
-                              SizedBox(width: 8.w),
+                              AppSpacing.w8,
                               Text(
                                 'Remember Me',
                                 style: GoogleFonts.outfit(
@@ -159,7 +161,7 @@ class LoginPage extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Center(
                 child: CustomButton(
                   text: "Continue",
@@ -225,7 +227,7 @@ class LoginPage extends StatelessWidget {
                   width: double.infinity,
                 ),
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Row(
                 children: [
                   Expanded(
@@ -272,12 +274,12 @@ class LoginPage extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 30.h),
+              AppSpacing.h30,
               Center(
                 child: SocialAuthButton(
                   text: 'Sign in with Google',
                   icon: SvgPicture.asset(
-                    'assets/icons/gmail.svg',
+                    IconAssets.gmail,
                     fit: BoxFit.contain,
                   ),
                   onTap: () async {
@@ -318,7 +320,7 @@ class LoginPage extends StatelessWidget {
                   },
                 ),
               ),
-              SizedBox(height: 40.h,),
+              AppSpacing.h40,
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

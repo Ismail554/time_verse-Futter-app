@@ -11,6 +11,8 @@ import 'package:time_verse/core/components/custom_bottomnav.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_date_picker.dart';
 import 'package:time_verse/core/components/custom_header.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/calender/controller/add_event_controller.dart';
 import 'package:time_verse/features/calender/controller/calender_controller.dart';
@@ -52,10 +54,10 @@ class AddEventPage extends StatelessWidget {
                   leftSpacing: 90.w,
                   rightSpacing: 79.w,
                 ),
-                SizedBox(height: 20.h,),
+                AppSpacing.h20,
               // --- SECTION: BASICS ---
               _buildSectionHeader('Basics'),
-              SizedBox(height: 8.h),
+              AppSpacing.h8,
              _buildFormContainer(
                 context,
                 child: Row(
@@ -64,7 +66,7 @@ class AddEventPage extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.only(top: 2.h, right: 12.w),
                       child: SvgPicture.asset(
-                        'assets/icons/sparkle.svg',
+                        IconAssets.sparkle,
                         width: 20.w,
                         height: 20.h,
                       ),
@@ -83,7 +85,7 @@ class AddEventPage extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(height: 4.h),
+                          AppSpacing.h4,
                           TextFormField(
                             controller: addEventController.titleController,
                             style: GoogleFonts.inter(
@@ -109,7 +111,7 @@ class AddEventPage extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 16.h),
+              AppSpacing.h16,
               _buildFormContainer(
                 context,
                 child: Row(
@@ -134,7 +136,7 @@ class AddEventPage extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(height: 4.h),
+                          AppSpacing.h4,
                           TextFormField(
                             controller: addEventController.noteController,
                             maxLines: 2,
@@ -162,10 +164,10 @@ class AddEventPage extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               // --- SECTION: SCHEDULE ---
               _buildSectionHeader('Schedule'),
-              SizedBox(height: 8.h),
+              AppSpacing.h8,
               _buildFormContainer(
                 context,
                 child: GestureDetector(
@@ -189,7 +191,7 @@ class AddEventPage extends StatelessWidget {
                       Padding(
                         padding: EdgeInsets.only(right: 12.w),
                         child: SvgPicture.asset(
-                          'assets/icons/calender_2.svg',
+                          IconAssets.calender2,
                           width: 20.w,
                           height: 20.h,
                         ),
@@ -207,7 +209,7 @@ class AddEventPage extends StatelessWidget {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            SizedBox(height: 4.h),
+                            AppSpacing.h4,
                             ValueListenableBuilder<TextEditingValue>(
                               valueListenable:addEventController.dateController,
                               builder: (context, value, child) {
@@ -232,7 +234,7 @@ class AddEventPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 12.h),
+              AppSpacing.h12,
               Row(
                 children: [
                   Expanded(
@@ -247,7 +249,7 @@ class AddEventPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12.w),
+                  AppSpacing.w12,
                   Expanded(
                     child: _buildFormContainer(
                       context,
@@ -263,11 +265,11 @@ class AddEventPage extends StatelessWidget {
                 ],
               ),
 
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
 
               // --- SECTION: DETAILS ---
               _buildSectionHeader('Details'),
-              SizedBox(height: 8.h),
+              AppSpacing.h8,
               _buildFormContainer(
                 context,
                 child: Row(
@@ -292,7 +294,7 @@ class AddEventPage extends StatelessWidget {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(height: 4.h),
+                          AppSpacing.h4,
                           TextFormField(
                             controller: addEventController.locationController,
                             style: GoogleFonts.inter(
@@ -318,7 +320,7 @@ class AddEventPage extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 12.h),
+              AppSpacing.h12,
               Consumer<TimePickerController>(
                 builder: (context, timeController, _) {
                   final selectedReminderOption =
@@ -419,7 +421,7 @@ class AddEventPage extends StatelessWidget {
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                SizedBox(height: 4.h),
+                                AppSpacing.h4,
                                 Text(
                                   selectedReminderOption,
                                   style: GoogleFonts.inter(
@@ -436,7 +438,7 @@ class AddEventPage extends StatelessWidget {
                   );
                 },
               ),
-              SizedBox(height: 12.h),
+              AppSpacing.h12,
               _buildFormContainer(
                 context,
                 child: Consumer<AddEventController>(
@@ -491,7 +493,7 @@ class AddEventPage extends StatelessWidget {
                                               ),
                                             ),
                                           ),
-                                          SizedBox(width: 16.w),
+                                          AppSpacing.w16,
                                           Text(
                                             isCustom && controller.selectedRepeat == 'Custom'? currentRepeat : label,
                                             style: GoogleFonts.inter(
@@ -528,7 +530,7 @@ class AddEventPage extends StatelessWidget {
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        SizedBox(height: 6.h),
+                                        AppSpacing.h6,
                                         Text(
                                           currentRepeat == 'Don\'t repeat'
                                               ? 'This event doesn\'t repeat.'
@@ -538,7 +540,7 @@ class AddEventPage extends StatelessWidget {
                                             fontSize: 14.sp,
                                           ),
                                         ),
-                                        SizedBox(height: 16.h),
+                                        AppSpacing.h16,
                                         buildRadioRow('Don\'t repeat'),
                                         Divider(
                                           color: Colors.grey.shade800,
@@ -600,7 +602,7 @@ class AddEventPage extends StatelessWidget {
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                SizedBox(height: 4.h),
+                                AppSpacing.h4,
                                 Text(
                                   currentRepeat,
                                   style: GoogleFonts.inter(
@@ -623,10 +625,10 @@ class AddEventPage extends StatelessWidget {
                   },
                 ),
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               // --- SECTION: SELECT CATEGORY ---
               _buildSectionHeader('Select Category'),
-              SizedBox(height: 12.h),
+              AppSpacing.h12,
               
               Consumer<AddEventController>(
                 builder: (context, controller, _) {
@@ -679,7 +681,7 @@ class AddEventPage extends StatelessWidget {
                                   color: goldColor,
                                   size: 24.sp,
                                 ),
-                                SizedBox(height: 6.h),
+                                AppSpacing.h6,
                                 Text(
                                   category.name,
                                   maxLines: 1,
@@ -700,7 +702,7 @@ class AddEventPage extends StatelessWidget {
                   );
                 },
               ),
-              SizedBox(height: 28.h),
+              AppSpacing.h28,
               // --- SAVE BUTTON ---
               CustomButton(
                 text: "Save",
@@ -732,7 +734,7 @@ class AddEventPage extends StatelessWidget {
                 height: 51.h,
                 width: double.infinity,
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
             ],
           ),
         ),

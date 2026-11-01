@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_header.dart';
 import 'package:time_verse/core/components/custom_input_field.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
 import 'package:time_verse/features/settings/profile/custom_widget/custom_datefield.dart';
@@ -35,17 +37,17 @@ class Profile extends StatelessWidget {
                   leftSpacing: 100.w,
                   rightSpacing: 83.w,
                 ),
-                SizedBox(height: 20.h),
+                AppSpacing.h20,
                 if (controller.isLoading)
                   const CircularProgressIndicator()
                 else ...[
                   // ProfileImagePicker(
-                  //   assetPath: 'assets/images/profile_img.png',
+                  //   assetPath: ImageAssets.profileImg,
                   //   pickedImage: controller.pickedImage,
                   //   onCameraTap: controller.pickImage,
                   // ),
                   ProfileImagePicker(
-                    assetPath: 'assets/images/profile_img.png',
+                    assetPath: ImageAssets.profileImg,
                     pickedImage: controller.pickedImage,
                     imageUrl: controller.currentUser?.profilePicture != null
                       ? (controller.currentUser!.profilePicture!.startsWith('http',)
@@ -54,7 +56,7 @@ class Profile extends StatelessWidget {
                       : null,
                     onCameraTap: controller.pickImage,
                   ),
-                  SizedBox(height: 20.h),
+                  AppSpacing.h20,
                   Container(
                     padding: EdgeInsets.all(24.sp),
                     decoration: BoxDecoration(
@@ -76,7 +78,7 @@ class Profile extends StatelessWidget {
                           height: 44.h,
                           hintFontSize: 14.sp,
                         ),
-                        SizedBox(height: 20.h),
+                        AppSpacing.h20,
                         
                         CustomInputField(
                           label: 'Email',
@@ -88,7 +90,7 @@ class Profile extends StatelessWidget {
                           hintFontSize: 14.sp,
                           isReadOnly: true,
                         ),
-                        SizedBox(height: 20.h),
+                        AppSpacing.h20,
                         CustomInputField(
                           label: 'Password',
                           hintText: '***********',
@@ -99,7 +101,7 @@ class Profile extends StatelessWidget {
                           hintFontSize: 14.sp,
                           isReadOnly: true,
                         ),
-                        SizedBox(height: 20.h),
+                        AppSpacing.h20,
                         DateField(
                           label: 'Date of Birth',
                           selectedDate:controller.dateController.text.trim().isNotEmpty
@@ -108,7 +110,7 @@ class Profile extends StatelessWidget {
                             controller.setBirthDate(newDate);
                           },
                         ),
-                        SizedBox(height: 20.h),
+                        AppSpacing.h20,
                         CustomButton(
                           text: "Update",
                           onPressed: () {

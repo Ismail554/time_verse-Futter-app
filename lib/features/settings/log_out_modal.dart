@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/config/app_route/app_prefernce.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 import 'package:time_verse/features/home/controller/home_controller.dart';
@@ -30,11 +32,11 @@ void showLogoutDialog(BuildContext context) {
             mainAxisSize: MainAxisSize.min,
             children: [
               SvgPicture.asset(
-                'assets/icons/delete_icon_dark.svg',
+                IconAssets.deleteIconDark,
                 width: 30.w,
                 height: 30.h,
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Text(
                 'Logout',
                 style: GoogleFonts.outfit(
@@ -45,7 +47,7 @@ void showLogoutDialog(BuildContext context) {
                       : const Color(0xFF373F4B),
                 ),
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Text(
                 'Are you sure you want to Log Out?\nThis action cannot be undone. Are you sure you want to continue?',
                 textAlign: TextAlign.center,
@@ -57,7 +59,7 @@ void showLogoutDialog(BuildContext context) {
                     : const Color(0xFF373F4B),
                 ),
               ),
-              SizedBox(height: 24.h),
+              AppSpacing.h24,
               Row(
                 children: [
                   Expanded(
@@ -78,7 +80,7 @@ void showLogoutDialog(BuildContext context) {
                       ),
                     ),
                   ),
-                  SizedBox(width: 12.w),
+                  AppSpacing.w12,
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {

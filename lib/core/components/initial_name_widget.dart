@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 
 
 class CustomUserInitialsAvatar extends StatelessWidget {
@@ -16,7 +17,7 @@ class CustomUserInitialsAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
   String cleanName = userFirstName.trim();
   String firstLetter = cleanName.isNotEmpty ? cleanName[0].toUpperCase() : 'R';
-  final String alphabetSvgPath = 'assets/alphabet/$firstLetter.svg';
+  final String alphabetSvgPath = AlphabetAssets.getLetterSvg(firstLetter);
   
   debugPrint('Loading Avatar Asset Path: ---> "$alphabetSvgPath"');
 

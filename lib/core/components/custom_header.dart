@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/theme/theme_provider.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class CustomHeaderBar extends StatelessWidget {
@@ -45,7 +47,7 @@ class CustomHeaderBar extends StatelessWidget {
                 }
               },
               icon: SvgPicture.asset(
-                isDarkMode ? 'assets/icons/arrow_back.svg' : 'assets/icons/arrow_back_light.svg',
+                isDarkMode ? IconAssets.arrowBack : IconAssets.arrowBackLight,
                 width: 37.w,
                 height: 37.h,
               ),
@@ -68,15 +70,15 @@ class CustomHeaderBar extends StatelessWidget {
               },
               icon: SvgPicture.asset(
                 isDarkMode
-                ? 'assets/icons/theme_dark.svg'
-                : 'assets/icons/light_theme.svg',
+                ? IconAssets.themeDark
+                : IconAssets.lightTheme,
                 width: 37.w,
                 height: 37.h,
               ),
             ),
           ],
         ),
-        SizedBox(height: 10.h),
+        AppSpacing.h10,
         Row(
           children: [
             if (showLeftLine)
@@ -102,7 +104,7 @@ class CustomHeaderBar extends StatelessWidget {
                 ),
               ),
             SvgPicture.asset(
-              'assets/icons/sparkle.svg',
+              IconAssets.sparkle,
               height: 14.h,
               width: 14.w,
             ),

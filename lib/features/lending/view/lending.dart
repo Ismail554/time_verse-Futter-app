@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/prograss_bar.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class LandingScreen extends StatelessWidget {
@@ -14,8 +16,8 @@ class LandingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final String logoAsset = isDarkMode
-        ? 'assets/images/logo.png' 
-        : 'assets/images/logo_light.png';
+        ? ImageAssets.logo 
+        : ImageAssets.logoLight;
 
     final Color primaryTextColor = AppColors.getDynamicTextColor(context); 
     final Color secondaryTextColor = isDarkMode 
@@ -44,7 +46,7 @@ class LandingScreen extends StatelessWidget {
                     height: 263.h,
                   ),
                 ),
-                SizedBox(height: 20.h,),
+                AppSpacing.h20,
                 Text(
                   'Welcome to',
                   style: GoogleFonts.playfair(
@@ -53,7 +55,7 @@ class LandingScreen extends StatelessWidget {
                     color: primaryTextColor,
                   ),
                 ),
-                SizedBox(height: 10.h,),
+                AppSpacing.h10,
                 RichText(
                   text: TextSpan(
                     style: GoogleFonts.playfair(
@@ -74,7 +76,7 @@ class LandingScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 10.h),
+                AppSpacing.h10,
                 Text(
                   'Guiding your daily journey with calm, clarity, and intention.',
                   textAlign: TextAlign.center,
@@ -84,7 +86,7 @@ class LandingScreen extends StatelessWidget {
                     color: AppColors.text_color
                   ) ,
                 ),
-                SizedBox(height: 20.h,),
+                AppSpacing.h20,
                 CustomButton(
                   text: "Start Your Journey",
                   onPressed: () {
@@ -98,7 +100,7 @@ class LandingScreen extends StatelessWidget {
                   height: 48.h,
                   width: 219.48.w,
                 ),
-                SizedBox(height: 80.h,),
+                AppSpacing.h80,
                 SizedBox(
                   width: 142.w,
                   child: ProgressIndicatorWidget(
@@ -107,15 +109,15 @@ class LandingScreen extends StatelessWidget {
                     progressColor: AppColors.third_color,
                   ),
                 ),
-                SizedBox(height: 20.h,),
+                AppSpacing.h20,
                 Column(
                   children: [
                     SvgPicture.asset(
-                      'assets/icons/swipe_up.svg',
+                      IconAssets.swipeUp,
                       width: 24.w,
                       height: 24.h,
                     ),
-                    SizedBox(height: 8.h,),
+                    AppSpacing.h8,
                     TextButton(
                       // 3. Make the text button also navigate to login when tapped
                       onPressed: () {

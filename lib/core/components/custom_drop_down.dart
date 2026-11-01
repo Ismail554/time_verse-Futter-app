@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class CustomDropdownField<T> extends StatelessWidget {
@@ -62,7 +63,7 @@ class CustomDropdownField<T> extends StatelessWidget {
             ],
           ),
         ),
-        SizedBox(height: 5.h),
+        AppSpacing.h5,
         SizedBox(
           height: height ?? 48.h, // Slightly taller usually feels better for dropdowns
           child: DropdownButtonFormField<T>(

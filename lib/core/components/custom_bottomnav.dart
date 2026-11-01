@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/bottom_card_controller/bottom_card_controller.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class NavItem {
@@ -20,11 +22,11 @@ class NavItem {
 }
 
 final List<NavItem> navItems = [
-  NavItem(label: 'Home', iconPath: 'assets/icons/home.svg', route: '/home'),
-  NavItem(label: 'Calendar', iconPath: 'assets/icons/calender.svg', route: '/calendar'),
-  NavItem(label: 'Add', iconPath: 'assets/icons/add_icon.svg', route: '/add'),
-  NavItem(label: 'Saved', iconPath: 'assets/icons/save.svg', route: '/saved'),
-  NavItem(label: 'Settings', iconPath: 'assets/icons/setting.svg', route: '/settings'),
+  NavItem(label: 'Home', iconPath: IconAssets.home, route: '/home'),
+  NavItem(label: 'Calendar', iconPath: IconAssets.calender, route: '/calendar'),
+  NavItem(label: 'Add', iconPath: IconAssets.addIcon, route: '/add'),
+  NavItem(label: 'Saved', iconPath: IconAssets.save, route: '/saved'),
+  NavItem(label: 'Settings', iconPath: IconAssets.setting, route: '/settings'),
 ];
 
 class CustomBottomNavBar extends StatelessWidget {
@@ -105,7 +107,7 @@ class CustomBottomNavBar extends StatelessWidget {
                                 BlendMode.srcIn,
                               ),
                             ),
-                            SizedBox(height: 2.h),
+                            AppSpacing.h2,
                             Text(
                               item.label,
                               style: GoogleFonts.inter(

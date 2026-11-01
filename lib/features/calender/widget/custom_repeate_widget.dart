@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/calender/controller/add_event_controller.dart';
 
@@ -53,7 +54,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  SizedBox(height: 20.h),
+                  AppSpacing.h20,
 
                   // Repeats every
                   Text(
@@ -64,7 +65,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  SizedBox(height: 8.h),
+                  AppSpacing.h8,
                   Row(
                     children: [
                       Container(
@@ -88,7 +89,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                           },
                         ),
                       ),
-                      SizedBox(width: 12.w),
+                      AppSpacing.w12,
                       Container(
                         height: 40.h,
                         padding: EdgeInsets.symmetric(horizontal: 10.w),
@@ -118,9 +119,9 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                     ],
                   ),
 
-                  SizedBox(height: 20.h),
+                  AppSpacing.h20,
                   Divider(color: borderColor, height: 1),
-                  SizedBox(height: 16.h),
+                  AppSpacing.h16,
 
                   // Repeats on
                   if (tempUnit == 'week') ...[
@@ -132,7 +133,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 12.h),
+                    AppSpacing.h12,
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(7, (index) {
@@ -173,9 +174,9 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                         );
                       }),
                     ),
-                    SizedBox(height: 20.h),
+                    AppSpacing.h20,
                     Divider(color: borderColor, height: 1),
-                    SizedBox(height: 16.h),
+                    AppSpacing.h16,
                   ],
 
                   // Ends
@@ -187,7 +188,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  SizedBox(height: 10.h),
+                  AppSpacing.h10,
 
                   // Never
                   InkWell(
@@ -222,7 +223,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                             onChanged: (val) => setDialogState(() => tempEndType = val!),
                           ),
                           Text('On', style: GoogleFonts.inter(color: titleColor, fontSize: 14.sp)),
-                          SizedBox(width: 12.w),
+                          AppSpacing.w12,
                           GestureDetector(
                             onTap: () async {
                               final picked = await showDatePicker(
@@ -269,7 +270,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                             onChanged: (val) => setDialogState(() => tempEndType = val!),
                           ),
                           Text('After', style: GoogleFonts.inter(color: titleColor, fontSize: 14.sp)),
-                          SizedBox(width: 12.w),
+                          AppSpacing.w12,
                           Container(
                             width: 50.w,
                             height: 36.h,
@@ -292,7 +293,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                               },
                             ),
                           ),
-                          SizedBox(width: 10.w),
+                          AppSpacing.w10,
                           Text(
                             tempOccurrences > 1 ? 'occurrences' : 'occurrence',
                             style: GoogleFonts.inter(color: titleColor, fontSize: 14.sp),
@@ -302,7 +303,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                     ),
                   ),
 
-                  SizedBox(height: 20.h),
+                  AppSpacing.h20,
 
                   // Bottom Buttons
                   Row(
@@ -319,7 +320,7 @@ void showCustomRepeatDialog(BuildContext context, AddEventController controller)
                           ),
                         ),
                       ),
-                      SizedBox(width: 8.w),
+                      AppSpacing.w8,
                       TextButton(
                         onPressed: () {
                           controller.setCustomRepeat(

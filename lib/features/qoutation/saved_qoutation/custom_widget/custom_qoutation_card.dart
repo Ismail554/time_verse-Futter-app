@@ -5,6 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class QuoteCardWidget extends StatefulWidget {
@@ -56,7 +58,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
     const totalImages = 5;
     final imageIndex = (widget.id.abs() % totalImages) + 1;
     final prefix = isDarkMode ? 'db' : 'wb';
-    return 'assets/ai_generated_img/${prefix}_$imageIndex.png';
+    return AiImageAssets.getImage(isDark: isDarkMode, index: imageIndex);
   }
 
   @override
@@ -107,7 +109,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
+                                AppSpacing.h20,
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 4),
                                   child: Text(
@@ -132,11 +134,11 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                       child: Row(
                         children: [
                           SvgPicture.asset(
-                            'assets/icons/calender_2.svg',
+                            IconAssets.calender2,
                             width: 20.w,
                             height: 15.h,
                           ),
-                          const SizedBox(width: 6),
+                          AppSpacing.w6,
                           Expanded(
                             child: Text(
                               () {
@@ -197,7 +199,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                                   BlendMode.srcIn,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              AppSpacing.h4,
                               Text(
                                 'Favorite',
                                 style: GoogleFonts.outfit(
@@ -232,7 +234,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                                   BlendMode.srcIn,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              AppSpacing.h4,
                               Text(
                                 'Save',
                                 style: GoogleFonts.outfit(
@@ -260,7 +262,7 @@ class _QuoteCardWidgetState extends State<QuoteCardWidget> {
                                   BlendMode.srcIn,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              AppSpacing.h4,
                               Text(
                                 'Share',
                                 style: GoogleFonts.outfit(

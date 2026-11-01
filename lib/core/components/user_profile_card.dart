@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 
 class UserProfileCard extends StatelessWidget {
   final String imageUrl;
@@ -68,24 +70,24 @@ class UserProfileCard extends StatelessWidget {
                         fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Image.asset(
-                              'assets/images/profile_img.png',
+                              ImageAssets.profileImg,
                               fit: BoxFit.cover,
                             );
                           },
                         )
                         : Image.asset(
-                          imageUrl.isNotEmpty? imageUrl: 'assets/images/profile_img.png',
+                          imageUrl.isNotEmpty? imageUrl: ImageAssets.profileImg,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                         return Image.asset(
-                          'assets/images/profile_img.png',
+                          ImageAssets.profileImg,
                           fit: BoxFit.cover,
                         );
                       },
                     ),
                   ),
                 ),
-                SizedBox(width: 14.w),
+                AppSpacing.w14,
 
                 // 2. Center Section: Dynamic Backend Text Fields Stack
                 Expanded(
@@ -104,7 +106,7 @@ class UserProfileCard extends StatelessWidget {
                           color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
                         ),
                       ),
-                      SizedBox(height: 2.h),
+                      AppSpacing.h2,
                       
                       // Conditional Dynamic Membership Status Sub-Row
                       Row(
@@ -124,7 +126,7 @@ class UserProfileCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 4.h),
+                      AppSpacing.h4,
 
                       // User Account Subtitle description text block
                       Text(
@@ -140,7 +142,7 @@ class UserProfileCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: 8.w),
+                AppSpacing.w8,
 
                 // 3. Right Section: Linear Trailing Dynamic Forward Arrow Icon Indicator
                 Icon(

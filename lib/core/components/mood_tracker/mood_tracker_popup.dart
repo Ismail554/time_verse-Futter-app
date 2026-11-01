@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/config/services/user_session.dart';
 import 'package:time_verse/core/components/mood_tracker/controller.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
 
@@ -121,7 +122,7 @@ class MoodTrackerPopup extends StatelessWidget {
                               ],
                             ),
                             
-                            SizedBox(height: 16.h),
+                            AppSpacing.h16,
                             Row(
                               children: [
                                 Text(
@@ -139,7 +140,7 @@ class MoodTrackerPopup extends StatelessWidget {
                               ],
                             ),
                             
-                            SizedBox(height: 6.h),
+                            AppSpacing.h6,
                             Consumer<ProfileController>(
                               builder: (context, controller, _) {
                                 final username = controller.currentUser?.name ??
@@ -155,7 +156,7 @@ class MoodTrackerPopup extends StatelessWidget {
                                 );
                               },
                             ),                            
-                            SizedBox(height: 12.h),
+                            AppSpacing.h12,
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                               decoration: BoxDecoration(
@@ -172,7 +173,7 @@ class MoodTrackerPopup extends StatelessWidget {
                                     '📅',
                                     style: TextStyle(fontSize: 14.sp),
                                   ),
-                                  SizedBox(width: 8.w),
+                                  AppSpacing.w8,
                                   Text(
                                     _getFormattedDate(),
                                     style: GoogleFonts.outfit(
@@ -185,7 +186,7 @@ class MoodTrackerPopup extends StatelessWidget {
                               ),
                             ),
                             
-                            SizedBox(height: 28.h),
+                            AppSpacing.h28,
                             Text(
                               "What's your mood\ntoday?",
                               style: GoogleFonts.playfairDisplay(
@@ -195,7 +196,7 @@ class MoodTrackerPopup extends StatelessWidget {
                                 height: 1.2,
                               ),
                             ),
-                            SizedBox(height: 12.h),
+                            AppSpacing.h12,
                             Text(
                               "Your emotion helps AI generate a more personal quote and peaceful daily guidance.",
                               style: GoogleFonts.outfit(
@@ -205,7 +206,7 @@ class MoodTrackerPopup extends StatelessWidget {
                                 height: 1.4,
                               ),
                             ),
-                            SizedBox(height: 24.h),
+                            AppSpacing.h24,
                             GridView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -251,7 +252,7 @@ class MoodTrackerPopup extends StatelessWidget {
                                           mood['emoji'] as String,
                                           style: TextStyle(fontSize: 26.sp),
                                         ),
-                                        SizedBox(height: 6.h),
+                                        AppSpacing.h6,
                                         Text(
                                           mood['label'] as String,
                                           textAlign: TextAlign.center,

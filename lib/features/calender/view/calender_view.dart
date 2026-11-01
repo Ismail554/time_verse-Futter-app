@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_bottomnav.dart';
 import 'package:time_verse/core/components/custom_header.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/all_events/custom_widget/custom_eventcard.dart';
 import 'package:time_verse/features/all_events/custom_widget/event_remove_modal.dart';
@@ -40,9 +41,9 @@ import 'package:time_verse/features/calender/widget/custom_calender_widget.dart'
 //                 leftSpacing: 80.w,
 //                 rightSpacing: 57.w,
 //               ),
-//               SizedBox(height: 16.h),              
+//               AppSpacing.h16,              
 //               FancyCalendarView(),
-//               SizedBox(height: 28.h),              
+//               AppSpacing.h28,              
 //               Row(
 //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
 //                 children: [
@@ -81,7 +82,7 @@ import 'package:time_verse/features/calender/widget/custom_calender_widget.dart'
 //                               color: const Color(0xFFFFA500), 
 //                             ),
 //                           ),
-//                           SizedBox(width: 4.w),
+//                           AppSpacing.w4,
 //                           Icon(
 //                             Icons.arrow_forward,
 //                             size: 12.sp,
@@ -93,7 +94,7 @@ import 'package:time_verse/features/calender/widget/custom_calender_widget.dart'
 //                   ),
 //                 ],
 //               ),
-//               SizedBox(height: 16.h),
+//               AppSpacing.h16,
               
 //               // 4. Dynamic Event Cards List
 //               Consumer<CalendarController>(
@@ -143,7 +144,7 @@ import 'package:time_verse/features/calender/widget/custom_calender_widget.dart'
 //                   );
 //                 },
 //               ),
-//               SizedBox(height: 100.h),
+//               AppSpacing.h100,
 //             ],
 //           ),
 //         ),
@@ -182,9 +183,9 @@ class CalenderView extends StatelessWidget {
                 leftSpacing: 80.w,
                 rightSpacing: 57.w,
               ),
-              SizedBox(height: 16.h),              
+              AppSpacing.h16,              
               FancyCalendarView(),
-              SizedBox(height: 28.h),              
+              AppSpacing.h28,              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -221,7 +222,7 @@ class CalenderView extends StatelessWidget {
                               color: const Color(0xFFFFA500), 
                             ),
                           ),
-                          SizedBox(width: 4.w),
+                          AppSpacing.w4,
                           Icon(
                             Icons.arrow_forward,
                             size: 12.sp,
@@ -233,7 +234,7 @@ class CalenderView extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 16.h),
+              AppSpacing.h16,
               
               Consumer<CalendarController>(
                 builder: (context, controller, _) {
@@ -282,7 +283,7 @@ class CalenderView extends StatelessWidget {
                   );
                 },
               ),
-              SizedBox(height: 100.h),
+              AppSpacing.h100,
             ],
           ),
         ),

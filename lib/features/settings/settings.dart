@@ -8,6 +8,8 @@ import 'package:time_verse/core/components/custom_header.dart';
 import 'package:time_verse/core/components/custom_settings_section.dart';
 import 'package:time_verse/core/components/notification_card.dart';
 import 'package:time_verse/core/components/user_profile_card.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/features/settings/log_out_modal.dart';
 import 'package:time_verse/features/settings/settings_controller.dart';
 
@@ -34,10 +36,10 @@ class Settings extends StatelessWidget {
                   leftSpacing: 100.w,
                   rightSpacing: 79.w,
                 ),
-                SizedBox(height: 24.h),
+                AppSpacing.h24,
 
                 UserProfileCard(
-                  imageUrl: userSession.profileImageUrl ?? 'assets/images/profile_img.png',
+                  imageUrl: userSession.profileImageUrl ?? ImageAssets.profileImg,
                   userName: userSession.username ?? '',
                   isPremium: false,
                   subtitle: 'Manage your account and preferences',
@@ -45,7 +47,7 @@ class Settings extends StatelessWidget {
                     context.push('/profile');
                   },
                 ),
-                SizedBox(height: 24.h),
+                AppSpacing.h24,
                 // 2. Alert Notification Action Card Component
                 TappableNotificationCard(
                   title: 'Notifications',
@@ -53,7 +55,7 @@ class Settings extends StatelessWidget {
                   badgeCount: 1, // Dynamically input your real backend unread count here
                   onTap: () => context.push('/notification'),
                 ),
-                SizedBox(height: 24.h),
+                AppSpacing.h24,
                 // Section 1: Security (Profile & Change Password)
                 SettingsSection(
                   title: 'Security',
@@ -61,7 +63,7 @@ class Settings extends StatelessWidget {
                     SettingsItem(
                       label: 'Change Password',
                       subtitle:'Update your security password', 
-                      iconPath: 'assets/icons/lock.svg',
+                      iconPath: IconAssets.lock,
                       onTap: () => context.push('/change_password'),
                     ),
                   ],
@@ -74,7 +76,7 @@ class Settings extends StatelessWidget {
                       label: 'Premium Plan',
                       subtitle: 'Unlimited AI quotes • Priority support',
                       statusText: 'Active until June 20, 2026',
-                      iconPath: 'assets/icons/dollar_icon.svg',
+                      iconPath: IconAssets.dollarIcon,
                       onTap: () => context.push('/subscription'),
                     ),
                   ],
@@ -85,12 +87,12 @@ class Settings extends StatelessWidget {
                   items: [
                     SettingsItem(
                       label: 'Privacy Policy',
-                      iconPath: 'assets/icons/shield_1.svg',
+                      iconPath: IconAssets.shield1,
                       onTap: () => context.push('/privacy_policy'),
                     ),
                     SettingsItem(
                       label: 'Terms & Conditions',
-                      iconPath: 'assets/icons/shield_1.svg',
+                      iconPath: IconAssets.shield1,
                       onTap: () => context.push('/terms_and_condition'),
                     ),
                   ],
@@ -103,12 +105,12 @@ class Settings extends StatelessWidget {
                   items: [
                     SettingsItem(
                       label: 'Delete Account',
-                      iconPath: 'assets/icons/trash.svg',
+                      iconPath: IconAssets.trash,
                       onTap: () => context.push('/delete_account'),
                     ),
                     SettingsItem(
                       label: 'Logout',
-                      iconPath: 'assets/icons/logout.svg',
+                      iconPath: IconAssets.logout,
                       onTap: () => showLogoutDialog(context),
                     ),
                   ],

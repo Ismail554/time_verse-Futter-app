@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 class TappableNotificationCard extends StatelessWidget {
   final String title;
@@ -84,7 +85,7 @@ class TappableNotificationCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                SizedBox(width: 16.w),
+                AppSpacing.w16,
                 // 2. Text Details Section
                 Expanded(
                   child: Column(
@@ -99,7 +100,7 @@ class TappableNotificationCard extends StatelessWidget {
                           color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
                         ),
                       ),
-                      SizedBox(height: 2.h),
+                      AppSpacing.h2,
                       Text(
                         subtitle,
                         style: GoogleFonts.outfit(
@@ -111,7 +112,7 @@ class TappableNotificationCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: 8.w),
+                AppSpacing.w8,
 
                 // 3. Right Side Custom Amber-Gold Action Arrow
                 Icon(

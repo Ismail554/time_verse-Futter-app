@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_bottomnav.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_header.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/all_events/controller/event_details_controller.dart';
 import 'package:time_verse/features/all_events/model/event_model.dart';
@@ -62,7 +64,7 @@ class EventDetails extends StatelessWidget {
               final int randomSeed = currentQuoteText.hashCode;
               final int randomImageNum = (Random(randomSeed).nextInt(11)) + 1;
               final String prefix = isDarkMode ? 'db_' : 'wb_';
-              final String currentBgPath = 'assets/ai_generated_img/$prefix$randomImageNum.png';
+              final String currentBgPath = AiImageAssets.getImage(isDark: isDarkMode, index: randomImageNum);
               
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 40.0.h),
@@ -75,7 +77,7 @@ class EventDetails extends StatelessWidget {
                       rightSpacing: 80,
                       onBackPressed: () => context.go('/home'),
                     ),
-                    SizedBox(height: 20.h),
+                    AppSpacing.h20,
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16.r),
                       child: Container(
@@ -102,7 +104,7 @@ class EventDetails extends StatelessWidget {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SizedBox(height: 20.h,),
+                              AppSpacing.h20,
                               Text(
                                 eventDetail.title.isEmpty ? 'Traveling to grandmother' : eventDetail.title,
                                 textAlign: TextAlign.center,
@@ -112,7 +114,7 @@ class EventDetails extends StatelessWidget {
                                   color: isDarkMode ? Colors.white : Colors.black,
                                 ),
                               ),
-                              SizedBox(height: 6.h),
+                              AppSpacing.h6,
                               Text(
                                 'Today • ${eventDetail.startTime.isEmpty ? "2:00 PM" : eventDetail.startTime}',
                                 textAlign: TextAlign.center,
@@ -122,7 +124,7 @@ class EventDetails extends StatelessWidget {
                                   color: isDarkMode ? const Color(0xFF9CA3AF) : Colors.black,
                                 ),
                               ),
-                              SizedBox(height: 14.h),
+                              AppSpacing.h14,
                               Row(
                                 children: [
                                   Expanded(
@@ -141,7 +143,7 @@ class EventDetails extends StatelessWidget {
                                   Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 8.w),
                                     child: SvgPicture.asset(
-                                      'assets/icons/sparkle.svg',
+                                      IconAssets.sparkle,
                                       width: 12.w,
                                       height: 12.h,
                                       colorFilter: const ColorFilter.mode(
@@ -163,7 +165,7 @@ class EventDetails extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 24.h),
+                              AppSpacing.h24,
                               RepaintBoundary(
                                 key: eventController.quoteShareKey,
                                 child: Text(
@@ -177,7 +179,7 @@ class EventDetails extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 24.h),
+                              AppSpacing.h24,
                               Text(
                                 'Inspired by InfiniQoute',
                                 textAlign: TextAlign.center,
@@ -192,7 +194,7 @@ class EventDetails extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -214,7 +216,7 @@ class EventDetails extends StatelessWidget {
                           height: 48.h,
                           width: 159.w,
                           leadingIcon: SvgPicture.asset(
-                            'assets/icons/download.svg',
+                            IconAssets.download,
                             width: 18.w,
                             height: 18.h,
                             colorFilter: ColorFilter.mode(
@@ -223,7 +225,7 @@ class EventDetails extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SizedBox(width: 10.w),
+                        AppSpacing.w10,
                         CustomButton(
                           text: "Share",
                           onPressed: () {
@@ -236,7 +238,7 @@ class EventDetails extends StatelessWidget {
                           height: 48.h,
                           width: 159.w,
                           leadingIcon: SvgPicture.asset(
-                            'assets/icons/share_filled.svg',
+                            IconAssets.shareFilled,
                             width: 18.w,
                             height: 18.h,
                             colorFilter: const ColorFilter.mode(
@@ -247,7 +249,7 @@ class EventDetails extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     TextButton(
                       onPressed: () => context.push('/all_events'),
                       child: Text(
@@ -283,7 +285,7 @@ class EventDetails extends StatelessWidget {
             rightSpacing: 80,
             onBackPressed: () => context.go('/home'),
           ),
-          SizedBox(height: 20.h),
+          AppSpacing.h20,
           Shimmer.fromColors(
             baseColor: baseColor,
             highlightColor: highlightColor,

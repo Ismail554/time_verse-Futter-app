@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_input_field.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/auth/reset_password/controller/reset_password_controller.dart';
 
@@ -30,12 +32,12 @@ class ResetPassword extends StatelessWidget {
           children: [
             Center(
               child: Image.asset(
-                'assets/images/forgot_password.png',
+                ImageAssets.forgotPassword,
                 width:233.w,
                 height: 184.h,
               ),
             ),
-            SizedBox(height: 5.h,),
+            AppSpacing.h5,
             Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -51,7 +53,7 @@ class ResetPassword extends StatelessWidget {
                     letterSpacing: 0.5,
                   ),
                 ),
-                SizedBox(height: 14.h,), // Clean vertical spacing between header elements
+                AppSpacing.h14, // Clean vertical spacing between header elements
                 // Subtitle Description Lines
                 Text(
                   'Create a new password to secure your\naccount and continue safely.',
@@ -65,7 +67,7 @@ class ResetPassword extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 20.h,),
+            AppSpacing.h20,
             Container(
               padding: EdgeInsets.all(24.sp),
               decoration: BoxDecoration(
@@ -85,7 +87,7 @@ class ResetPassword extends StatelessWidget {
                     isPassword: true,
                     fontSize: 13.sp,
                   ),
-                  SizedBox(height: 20.h,),
+                  AppSpacing.h20,
                   CustomInputField(
                     label: 'Confirm Password*',
                     hintText: 'Enter your password...',
@@ -93,7 +95,7 @@ class ResetPassword extends StatelessWidget {
                     isPassword: true,
                     fontSize: 13.sp,
                   ),
-                  SizedBox(height: 20.h,),
+                  AppSpacing.h20,
                   Center(
                     child: CustomButton(
                       text: "Continue",

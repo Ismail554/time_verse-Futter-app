@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -91,7 +92,7 @@ class CustomButton extends StatelessWidget {
         children: [
           if (leadingIcon != null) ...[
             leadingIcon!,
-            SizedBox(width: 8.w),
+            AppSpacing.w8,
           ],
           //Text(text, style: _buildTextStyle()),
           Flexible(

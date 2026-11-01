@@ -5,6 +5,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:time_verse/features/settings/notification/model/notification_model.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:time_verse/core/utils/platform_utils.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 
 // class NotificationSettingsController extends ChangeNotifier {
 //   final NotificationSettingsModel _settings = NotificationSettingsModel();
@@ -56,7 +58,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 //   // Request Android 12+ Exact Alarm Intent Permission
 //   Future<void> checkAndRequestExactAlarmPermission() async {
-//     if (Platform.isAndroid) {
+//     if (PlatformUtils.isAndroid) {
 //       final status = await Permission.scheduleExactAlarm.status;
 //       if (status.isDenied || status.isPermanentlyDenied) {
 //         const intent = AndroidIntent(
@@ -68,10 +70,10 @@ import 'package:url_launcher/url_launcher.dart';
 //   }
 
 //   Future<void> openDeviceSoundSettings() async {
-//     if (Platform.isAndroid) {
+//     if (PlatformUtils.isAndroid) {
 //       const intent = AndroidIntent(action: 'android.settings.SOUND_SETTINGS');
 //       await intent.launch();
-//     } else if (Platform.isIOS) {
+//     } else if (PlatformUtils.isIOS) {
 //       final Uri url = Uri.parse('App-Prefs:root=Sounds');
 //       if (await canLaunchUrl(url)) {
 //         await launchUrl(url);
@@ -99,7 +101,7 @@ class NotificationSettingsController extends ChangeNotifier {
   double get alarmVolume => _settings.alarmVolume;
   
   // Fallback cleanly to default asset if no system ringtone path has been captured yet
-  String get selectedRingtone => _settings.selectedRingtone.isEmpty ? 'assets/alarm.mp3' : _settings.selectedRingtone;
+  String get selectedRingtone => _settings.selectedRingtone.isEmpty ? AudioAssets.alarm : _settings.selectedRingtone;
 
   // Setters / Actions
   void setAllowNotifications(bool val) {
@@ -139,7 +141,7 @@ class NotificationSettingsController extends ChangeNotifier {
 
   // CALL THIS: Dynamically requests the active system tone path from Kotlin
   Future<void> fetchAndSyncSystemRingtone() async {
-    if (Platform.isAndroid) {
+    if (PlatformUtils.isAndroid) {
       try {
         final String? systemRingtoneUri = await _platform.invokeMethod('getDefaultRingtoneUri');
         if (systemRingtoneUri != null && systemRingtoneUri.isNotEmpty) {
@@ -153,7 +155,7 @@ class NotificationSettingsController extends ChangeNotifier {
 
   // Request Android 12+ Exact Alarm Intent Permission
   Future<void> checkAndRequestExactAlarmPermission() async {
-    if (Platform.isAndroid) {
+    if (PlatformUtils.isAndroid) {
       final status = await Permission.scheduleExactAlarm.status;
       if (status.isDenied || status.isPermanentlyDenied) {
         const intent = AndroidIntent(
@@ -165,13 +167,13 @@ class NotificationSettingsController extends ChangeNotifier {
   }
 
   Future<void> openDeviceSoundSettings() async {
-    if (Platform.isAndroid) {
+    if (PlatformUtils.isAndroid) {
       const intent = AndroidIntent(action: 'android.settings.SOUND_SETTINGS');
       await intent.launch();
       
       // Delays checking by 2 seconds so the user has time to tweak settings before syncing path
       Future.delayed(const Duration(seconds: 2), () => fetchAndSyncSystemRingtone());
-    } else if (Platform.isIOS) {
+    } else if (PlatformUtils.isIOS) {
       final Uri url = Uri.parse('App-Prefs:root=Sounds');
       if (await canLaunchUrl(url)) {
         await launchUrl(url);

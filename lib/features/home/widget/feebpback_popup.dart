@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/features/home/controller/home_controller.dart';
 
@@ -34,7 +35,7 @@ void showFeedbackDialog(BuildContext context,bool isDarkMode,HomeController home
                         color: isDarkMode ? Colors.white : const Color(0xFF4A4A4A),
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    AppSpacing.h20,
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(5, (index) {
@@ -54,7 +55,7 @@ void showFeedbackDialog(BuildContext context,bool isDarkMode,HomeController home
                         );
                       }),
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     Text(
                       'Your Feedback:',
                       style: GoogleFonts.outfit(
@@ -63,7 +64,7 @@ void showFeedbackDialog(BuildContext context,bool isDarkMode,HomeController home
                         color: isDarkMode? Colors.white: const Color(0xFF4A4A4A),
                       ),
                     ),
-                    SizedBox(height: 12.h),
+                    AppSpacing.h12,
                     TextField(
                       controller: controller.feedbackController,
                       maxLines: 4,
@@ -88,7 +89,7 @@ void showFeedbackDialog(BuildContext context,bool isDarkMode,HomeController home
                         ),
                       ),
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     SizedBox(
                       width: double.infinity,
                       height: 50.h,

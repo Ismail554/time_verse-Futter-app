@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 // class CustomInputField extends StatefulWidget {
@@ -242,7 +243,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
             ],
           ),
         ),
-        if (widget.label.isNotEmpty) SizedBox(height: 5.h),
+        if (widget.label.isNotEmpty) AppSpacing.h5,
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8.r),

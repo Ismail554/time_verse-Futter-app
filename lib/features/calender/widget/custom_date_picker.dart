@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class DatePickerDialog extends StatefulWidget {
@@ -63,7 +64,7 @@ class _DatePickerDialogState extends State<DatePickerDialog> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          AppSpacing.h8,
           TableCalendar(
             firstDay: DateTime(_today.year, 1, 1),
             lastDay: DateTime(_today.year, 12, 31),

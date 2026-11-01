@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -154,7 +155,7 @@ class CalendarController extends ChangeNotifier {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const CircularProgressIndicator(),
-                    const SizedBox(height: 12),
+                    AppSpacing.h12,
                     Text("Deleting...\n${elapsed.inSeconds}s", textAlign: TextAlign.center),
                   ],
                 ),

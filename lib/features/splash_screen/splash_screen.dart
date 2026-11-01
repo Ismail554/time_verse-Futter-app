@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
 import 'package:go_router/go_router.dart';
 import 'package:time_verse/config/app_route/app_prefernce.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 //import 'package:time_verse/core/components/mood_tracker/mood_tracker_popup.dart'; 
 
 class SplashScreen extends StatefulWidget {
@@ -72,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final String logoAsset = isDarkMode ? 'assets/images/logo.png' : 'assets/images/logo_light.png';
+    final String logoAsset = isDarkMode ? ImageAssets.logo : ImageAssets.logoLight;
 
     return Scaffold(
       backgroundColor: Colors.transparent,

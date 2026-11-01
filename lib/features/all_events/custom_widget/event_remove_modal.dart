@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 
 void showRemoveEventDialog(BuildContext context, {required VoidCallback onConfirm}) {
@@ -25,7 +26,7 @@ void showRemoveEventDialog(BuildContext context, {required VoidCallback onConfir
                 color: const Color(0xFFE52525), 
                 size: 44.sp,
               ),
-              SizedBox(height: 18.h),
+              AppSpacing.h18,
               
               Text(
                 'Are you sure you want to\nRemove this Event?',
@@ -38,7 +39,7 @@ void showRemoveEventDialog(BuildContext context, {required VoidCallback onConfir
                   height: 1.3,
                 ),
               ),
-              SizedBox(height: 14.h),
+              AppSpacing.h14,
               
               Text(
                 'This action cannot be undone. Are you sure you want to continue?',
@@ -51,7 +52,7 @@ void showRemoveEventDialog(BuildContext context, {required VoidCallback onConfir
                   height: 1.4,
                 ),
               ),
-              SizedBox(height: 24.h),
+              AppSpacing.h24,
               
               Row(
                 children: [
@@ -80,7 +81,7 @@ void showRemoveEventDialog(BuildContext context, {required VoidCallback onConfir
                       ),
                     ),
                   ),
-                  SizedBox(width: 14.w),
+                  AppSpacing.w14,
                   
                   // Remove Button
                   Expanded(

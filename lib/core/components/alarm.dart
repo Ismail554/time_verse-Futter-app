@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/config/app_route/app_route.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/notification/controller/notification_controller.dart';
 
@@ -177,7 +178,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(height: 12.h),
+                    AppSpacing.h12,
                     Text(
                       notification.title ?? 'Alarm Ringing',
                       textAlign: TextAlign.center,
@@ -189,7 +190,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    SizedBox(height: 12.h),
+                    AppSpacing.h12,
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -213,7 +214,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 20.h),
+                    AppSpacing.h20,
                     Text(
                       formattedTime,
                       style: GoogleFonts.playfairDisplay(
@@ -223,7 +224,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                         letterSpacing: -1,
                       ),
                     ),
-                    SizedBox(height: 8.h),
+                    AppSpacing.h8,
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -238,7 +239,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 32.h),
+                    AppSpacing.h32,
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.symmetric(
@@ -275,7 +276,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     Container(
                       width: 90.w,
                       height: 90.h,
@@ -324,7 +325,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     Row(
                       children: [
                         Expanded(
@@ -394,7 +395,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 16.w),
+                        AppSpacing.w16,
                         Expanded(
                           child: SizedBox(
                             height: 50.h,
@@ -432,7 +433,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                                     color: Colors.black,
                                     size: 18.sp,
                                   ),
-                                  SizedBox(width: 6.w),
+                                  AppSpacing.w6,
                                   Text(
                                     'Stop',
                                     style: GoogleFonts.inter(
@@ -448,7 +449,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 12.h),
+                    AppSpacing.h12,
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -467,7 +468,7 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 4.h),
+                    AppSpacing.h4,
                   ],
                 ),
               ),

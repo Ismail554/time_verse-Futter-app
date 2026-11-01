@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class ProfileImagePicker extends StatelessWidget {
@@ -66,7 +67,7 @@ class ProfileImagePicker extends StatelessWidget {
                 height: 32.w,
                 child: Center(
                   child: SvgPicture.asset(
-                    'assets/icons/camera.svg',
+                    IconAssets.camera,
                     width: 26.67.w,
                     height: 24.h,
                   ),

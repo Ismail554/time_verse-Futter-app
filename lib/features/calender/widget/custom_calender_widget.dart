@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/calender/controller/calender_controller.dart';
 
@@ -121,7 +122,7 @@ class FancyCalendarView extends StatelessWidget {
                           fontWeight: FontWeight.w500, 
                         ),
                       ),
-                      SizedBox(width: 4.w),
+                      AppSpacing.w4,
                       Icon(
                         Icons.arrow_drop_down,
                         color: const Color(0xFFF5B301),
@@ -129,7 +130,7 @@ class FancyCalendarView extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 2.h),
+                  AppSpacing.h2,
                   Text(
                     '${date.year}',
                     style: GoogleFonts.outfit(

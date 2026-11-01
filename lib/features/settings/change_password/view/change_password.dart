@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_header.dart';
 import 'package:time_verse/core/components/custom_input_field.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/change_password/controller/changepassowrd_controller.dart';
 
@@ -26,7 +28,7 @@ class ChangePassword extends StatelessWidget {
                 leftSpacing: 60.w,
                 rightSpacing: 30.w,
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Container(
                 padding: EdgeInsets.all(16.w,), 
                 decoration: BoxDecoration(
@@ -62,7 +64,7 @@ class ChangePassword extends StatelessWidget {
                         : const Color(0xFF1F2937),
                       ),
                     ),
-                    SizedBox(height: 8.h),
+                    AppSpacing.h8,
                     CustomInputField(
                       label: '',
                       hintText:'***********', 
@@ -71,13 +73,13 @@ class ChangePassword extends StatelessWidget {
                       fontSize: 16.sp,
                       height: 52.h, 
                       hintFontSize: 16.sp,
-                      //prefixSvgPath: 'assets/icons/lock_icon.svg',
+                      //prefixSvgPath: IconAssets.lockIcon,
                       // prefixIconColor: isDarkMode
                       //     ? const Color(0xFFFFB703)
                       //     : const Color(0xFF353535),
                       suffixIconColor: Colors.white,
                     ),
-                    SizedBox(height: 18.h),
+                    AppSpacing.h18,
         
                     // 2. New Password Section
                     Text(
@@ -90,7 +92,7 @@ class ChangePassword extends StatelessWidget {
                         : const Color(0xFF1F2937),
                       ),
                     ),
-                    SizedBox(height: 8.h),
+                    AppSpacing.h8,
                     CustomInputField(
                       label: '',
                       hintText: '***********',
@@ -99,13 +101,13 @@ class ChangePassword extends StatelessWidget {
                       fontSize: 16.sp,
                       height: 52.h,
                       hintFontSize: 16.sp,
-                      // prefixSvgPath: 'assets/icons/lock_icon.svg',
+                      // prefixSvgPath: IconAssets.lockIcon,
                       // prefixIconColor: isDarkMode
                       // ? const Color(0xFFFFB703)
                       // : const Color(0xFF353535),
                       suffixIconColor: Colors.white,
                     ),
-                    SizedBox(height: 18.h),
+                    AppSpacing.h18,
                     // 3. Confirm Password Section
                     Text(
                       'Confirm Password',
@@ -117,7 +119,7 @@ class ChangePassword extends StatelessWidget {
                         : const Color(0xFF1F2937),
                       ),
                     ),
-                    SizedBox(height: 8.h),
+                    AppSpacing.h8,
                     CustomInputField(
                       label: '',
                       hintText: '***********',
@@ -126,13 +128,13 @@ class ChangePassword extends StatelessWidget {
                       fontSize: 16.sp,
                       height: 52.h,
                       hintFontSize: 16.sp,
-                      // prefixSvgPath: 'assets/icons/lock_icon.svg',
+                      // prefixSvgPath: IconAssets.lockIcon,
                       // prefixIconColor: isDarkMode
                       // ? const Color(0xFFFFB703)
                       // : const Color(0xFF353535),
                       suffixIconColor: Colors.white,
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     // Action Submission Button Layer
                     CustomButton(
                       text: "Update",

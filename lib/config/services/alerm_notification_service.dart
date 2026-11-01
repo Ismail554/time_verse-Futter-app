@@ -3,6 +3,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:time_verse/core/utils/platform_utils.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 // class NotificationService {
@@ -25,7 +26,7 @@ import 'package:timezone/timezone.dart' as tz;
 //     );
 
 //     await _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
-//     if (Platform.isAndroid && await Permission.notification.isDenied) {
+//     if (PlatformUtils.isAndroid && await Permission.notification.isDenied) {
 //       await Permission.notification.request();
 //     }
 //   }
@@ -123,14 +124,14 @@ import 'package:timezone/timezone.dart' as tz;
 //   }
 
 //   static Future<bool> _hasExactAlarmPermission() async {
-//     if (!Platform.isAndroid) return true;
+//     if (!PlatformUtils.isAndroid) return true;
 
 //     final androidPlugin = _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 //     return await androidPlugin?.canScheduleExactNotifications() ?? false;
 //   }
 
 //   static Future<void> requestExactAlarmPermission() async {
-//     if (!Platform.isAndroid) return;
+//     if (!PlatformUtils.isAndroid) return;
 
 //     final hasPermission = await _hasExactAlarmPermission();
 //     if (hasPermission) return;
@@ -168,7 +169,7 @@ class NotificationService {
 
     await _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
 
-    if (Platform.isAndroid && await Permission.notification.isDenied) {
+    if (PlatformUtils.isAndroid && await Permission.notification.isDenied) {
       await Permission.notification.request();
     }
   }
@@ -234,14 +235,14 @@ class NotificationService {
   }
 
   static Future<bool> _hasExactAlarmPermission() async {
-    if (!Platform.isAndroid) return true;
+    if (!PlatformUtils.isAndroid) return true;
 
     final androidPlugin = _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
     return await androidPlugin?.canScheduleExactNotifications() ?? false;
   }
 
   static Future<void> requestExactAlarmPermission() async {
-    if (!Platform.isAndroid) return;
+    if (!PlatformUtils.isAndroid) return;
 
     final hasPermission = await _hasExactAlarmPermission();
     if (hasPermission) return;

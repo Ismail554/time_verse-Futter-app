@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class ImagePickerBox extends StatelessWidget {
@@ -64,7 +65,7 @@ class ImagePickerBox extends StatelessWidget {
                 height: 22.h,
                 colorFilter: ColorFilter.mode(primaryColor, BlendMode.srcIn),
               ),
-              SizedBox(height: 10.h),
+              AppSpacing.h10,
               // Main Title Text
               Text(
                 title,
@@ -75,7 +76,7 @@ class ImagePickerBox extends StatelessWidget {
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
-              SizedBox(height: 4.h),
+              AppSpacing.h4,
               // Subtitle Text
               Text(
                 subtitle,

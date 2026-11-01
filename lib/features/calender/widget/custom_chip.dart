@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 class BulletButton extends StatelessWidget {
   final String label;
@@ -36,7 +37,7 @@ class BulletButton extends StatelessWidget {
               height: 14.sp,
               color: color,
             ),
-            SizedBox(width: 8.w),
+            AppSpacing.w8,
             Text(
               label,
               textAlign: TextAlign.center,

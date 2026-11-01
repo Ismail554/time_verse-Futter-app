@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_bottomnav.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_header.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/qoutation/saved_qoutation/controller/saved_qoute_controller.dart';
 import 'package:time_verse/features/qoutation/saved_qoutation/custom_widget/custom_qoutation_card.dart';
@@ -34,7 +36,7 @@ class SavedQoutation extends StatelessWidget {
                 leftSpacing: 50.w,
                 rightSpacing: 23.w,
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               SearchAnchor(
                 // 🛠️ FIX: Listens to text updates/keystrokes when the full-screen search view overlay is active
                 viewOnChanged: (value) {
@@ -95,7 +97,7 @@ class SavedQoutation extends StatelessWidget {
                   });
                 },
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -119,7 +121,7 @@ class SavedQoutation extends StatelessWidget {
                       controller.shareAllQuotesAsImages(cardKeys);
                     },
                     leadingIcon: SvgPicture.asset(
-                      'assets/icons/share_filled.svg',
+                      IconAssets.shareFilled,
                       width: 14.w,
                       height: 12.25.h,
                       colorFilter: ColorFilter.mode(
@@ -137,7 +139,7 @@ class SavedQoutation extends StatelessWidget {
                  ),
                 ],
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               
               RepaintBoundary(
                 key: _boundaryKey,
@@ -159,11 +161,11 @@ class SavedQoutation extends StatelessWidget {
                                 time: quote['time'] ?? '',
                                 quoteText: quote['description'] ?? '',
                                 author: quote['author'] ?? '',
-                                shareIconPath: 'assets/icons/share.svg',
-                                heartIconPath: 'assets/icons/heart.svg',
-                                heartFilledIconPath:'assets/icons/heart_filled.svg',
-                                bookmarkIconPath: 'assets/icons/bookmark.svg',
-                                bookmarkFilledIconPath:'assets/icons/bookmark_filled.svg',
+                                shareIconPath: IconAssets.share,
+                                heartIconPath: IconAssets.heart,
+                                heartFilledIconPath: IconAssets.heartFilled,
+                                bookmarkIconPath: IconAssets.bookmark,
+                                bookmarkFilledIconPath: IconAssets.bookmarkFilled,
                                 onHeartTap: () {
                                   controller.toggleFavorite(quoteId);
                                 },
@@ -183,7 +185,7 @@ class SavedQoutation extends StatelessWidget {
                                   controller.shareQuotesAsImage(quote['description']);
                                 },
                               ),
-                              SizedBox(height: 10.h),
+                              AppSpacing.h10,
                             ],
                           );
                         }).toList(),
@@ -192,7 +194,7 @@ class SavedQoutation extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 120.h),
+              AppSpacing.h120,
             ],
           ),
         ),

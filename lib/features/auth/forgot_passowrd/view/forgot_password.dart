@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_dialogue.dart';
 import 'package:time_verse/core/components/custom_input_field.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/auth/forgot_passowrd/controller/forgot_password_controller.dart';
 
@@ -28,12 +30,12 @@ class ForgotPassword extends StatelessWidget {
             children: [
               Center(
                 child: Image.asset(
-                  'assets/images/forgot_password.png',
+                  ImageAssets.forgotPassword,
                   width:233.w,
                   height: 184.h,
                 ),
               ),
-              SizedBox(height: 5.h,),
+              AppSpacing.h5,
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -50,7 +52,7 @@ class ForgotPassword extends StatelessWidget {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    SizedBox(height: 10.h,), // Tight dynamic spacing layout matched to image
+                    AppSpacing.h10, // Tight dynamic spacing layout matched to image
                     // Subtitle Description Line
                     Text(
                       'We have send OTP code abc abc',
@@ -66,7 +68,7 @@ class ForgotPassword extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Container(
                 padding: EdgeInsets.all(24.sp),
                 decoration: BoxDecoration(
@@ -86,7 +88,7 @@ class ForgotPassword extends StatelessWidget {
                       isPassword: false,
                       fontSize: 13.sp,
                     ),
-                    SizedBox(height: 20.h,),
+                    AppSpacing.h20,
                     Center(
                       child: CustomButton(
                         text: "Send",
@@ -126,7 +128,7 @@ class ForgotPassword extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 250.h,),
+              AppSpacing.h250,
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

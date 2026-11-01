@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 class DateField extends StatelessWidget {
@@ -35,7 +36,7 @@ class DateField extends StatelessWidget {
               color: isDarkMode ? AppColors.text_color : AppColors.heading_color,
             ),
           ),
-          SizedBox(height: 5.h),
+          AppSpacing.h5,
           GestureDetector(
             onTap: () async {
               final picked = await showDatePicker(

@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_dialogue.dart';
 import 'package:time_verse/core/components/custom_otp_field.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/auth/otp/controller/otp_controller.dart';
 
@@ -35,12 +37,12 @@ class OtpView extends StatelessWidget {
             children: [
               Center(
                 child: Image.asset(
-                  'assets/images/forgot_password.png',
+                  ImageAssets.forgotPassword,
                   width: 219.w,
                   height: 219.h,
                 ),
               ),
-              SizedBox(height: 5.h,),
+              AppSpacing.h5,
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -56,7 +58,7 @@ class OtpView extends StatelessWidget {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    SizedBox(height: 12.h,), 
+                    AppSpacing.h12, 
                     Text(
                       'We have sand OTP code verification\nto your email',
                       textAlign: TextAlign.center,
@@ -70,7 +72,7 @@ class OtpView extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
                 decoration: BoxDecoration(
@@ -95,7 +97,7 @@ class OtpView extends StatelessWidget {
                         print('OTP entered: $code');
                       },
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     Row(
                       children: [
                         // Using Expanded allows dividers to stretch to edges perfectly like the image
@@ -132,7 +134,7 @@ class OtpView extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 24.h),
+                    AppSpacing.h24,
                     Center(
                       child: Container(
                         // Mimics the clean bottom glow effect beneath the button
@@ -205,7 +207,7 @@ class OtpView extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 40.h,),
+              AppSpacing.h40,
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

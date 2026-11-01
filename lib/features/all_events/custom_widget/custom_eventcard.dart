@@ -5,6 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
 // class EventCard extends StatelessWidget {
@@ -65,7 +67,7 @@ import 'package:time_verse/core/utils/colors.dart';
 //                         Row(
 //                           children: [
 //                             SvgPicture.asset(
-//                               'assets/icons/tittle_icon.svg',
+//                               IconAssets.tittleIcon,
 //                               height: 23.sp,
 //                               width: 23.sp,
 //                             ),
@@ -81,7 +83,7 @@ import 'package:time_verse/core/utils/colors.dart';
 //                             ),
 //                           ],
 //                         ),
-//                         SizedBox(height: 10.h),
+//                         AppSpacing.h10,
 //                         Text(
 //                           sub_title,
 //                           style: GoogleFonts.outfit(
@@ -96,7 +98,7 @@ import 'package:time_verse/core/utils/colors.dart';
 //                       ],
 //                     ),
 //                   ),
-//                   const SizedBox(width: 8),
+//                   AppSpacing.w8,
 //                   GestureDetector(
 //                     onTap: onEdit,
 //                     child: Icon(
@@ -105,27 +107,27 @@ import 'package:time_verse/core/utils/colors.dart';
 //                       color: isDarkMode ? AppColors.text_color : const Color(0xFF353535),
 //                     ),
 //                   ),
-//                   SizedBox(width: 10.w),
+//                   AppSpacing.w10,
 //                   GestureDetector(
 //                     onTap: onDelete,
 //                     child: SvgPicture.asset(
-//                       'assets/icons/delete_icon.svg',
+//                       IconAssets.deleteIcon,
 //                       width: 30.w,
 //                       height: 30.h,
 //                     ),
 //                   ),
 //                 ],
 //               ),
-//               SizedBox(height: 10.h),
+//               AppSpacing.h10,
 //               Row(
 //                 mainAxisAlignment: MainAxisAlignment.start,
 //                 children: [
 //                   SvgPicture.asset(
-//                     'assets/icons/today.svg',
+//                     IconAssets.today,
 //                     width: 15.w,
 //                     height: 15.h,
 //                   ),
-//                   SizedBox(width: 10.w),
+//                   AppSpacing.w10,
 //                   Text(
 //                     date,
 //                     style: GoogleFonts.outfit(
@@ -136,16 +138,16 @@ import 'package:time_verse/core/utils/colors.dart';
 //                   ),
 //                 ],
 //               ),
-//               SizedBox(height: 15.h),
+//               AppSpacing.h15,
 //               Row(
 //                 mainAxisAlignment: MainAxisAlignment.start,
 //                 children: [
 //                   SvgPicture.asset(
-//                     'assets/icons/clock_icon.svg',
+//                     IconAssets.clockIcon,
 //                     width: 15.w,
 //                     height: 15.h,
 //                   ),
-//                   SizedBox(width: 15.w),
+//                   AppSpacing.w15,
 //                   Text(
 //                     time,
 //                     style: GoogleFonts.outfit(
@@ -157,16 +159,16 @@ import 'package:time_verse/core/utils/colors.dart';
 //                 ],
 //               ),
 //               if (isValidLocation(location)) ...[
-//                 SizedBox(height: 15.h),
+//                 AppSpacing.h15,
 //                 Row(
 //                   mainAxisAlignment: MainAxisAlignment.start,
 //                   children: [
 //                     SvgPicture.asset(
-//                       'assets/icons/pin.svg',
+//                       IconAssets.pin,
 //                       width: 20.w,
 //                       height: 20.h,
 //                     ),
-//                     SizedBox(width: 10.w),
+//                     AppSpacing.w10,
 //                     Expanded(
 //                       child: Text(
 //                         location,
@@ -181,7 +183,7 @@ import 'package:time_verse/core/utils/colors.dart';
 //                   ],
 //                 ),
 //               ],
-//               SizedBox(height: 10.h),
+//               AppSpacing.h10,
 //             ],
 //           ),
 //         ),
@@ -255,7 +257,7 @@ class EventCard extends StatelessWidget {
                         Row(
                           children: [
                             SvgPicture.asset(
-                              'assets/icons/tittle_icon.svg',
+                              IconAssets.tittleIcon,
                               height: 23.sp,
                               width: 23.sp,
                             ),
@@ -271,7 +273,7 @@ class EventCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        SizedBox(height: 10.h),
+                        AppSpacing.h10,
                         Text(
                           sub_title,
                           style: GoogleFonts.outfit(
@@ -286,7 +288,7 @@ class EventCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  AppSpacing.w8,
                   GestureDetector(
                     onTap: onEdit,
                     child: Icon(
@@ -295,27 +297,27 @@ class EventCard extends StatelessWidget {
                       color: isDarkMode ? AppColors.text_color : const Color(0xFF353535),
                     ),
                   ),
-                  SizedBox(width: 10.w),
+                  AppSpacing.w10,
                   GestureDetector(
                     onTap: onDelete,
                     child: SvgPicture.asset(
-                      'assets/icons/delete_icon.svg',
+                      IconAssets.deleteIcon,
                       width: 30.w,
                       height: 30.h,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 10.h),
+              AppSpacing.h10,
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   SvgPicture.asset(
-                    'assets/icons/today.svg',
+                    IconAssets.today,
                     width: 15.w,
                     height: 15.h,
                   ),
-                  SizedBox(width: 10.w),
+                  AppSpacing.w10,
                   Text(
                     date,
                     style: GoogleFonts.outfit(
@@ -326,16 +328,16 @@ class EventCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 15.h),
+              AppSpacing.h15,
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   SvgPicture.asset(
-                    'assets/icons/clock_icon.svg',
+                    IconAssets.clockIcon,
                     width: 15.w,
                     height: 15.h,
                   ),
-                  SizedBox(width: 15.w),
+                  AppSpacing.w15,
                   Text(
                     time,
                     style: GoogleFonts.outfit(
@@ -347,16 +349,16 @@ class EventCard extends StatelessWidget {
                 ],
               ),
               if (isValidLocation(location)) ...[
-                SizedBox(height: 15.h),
+                AppSpacing.h15,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     SvgPicture.asset(
-                      'assets/icons/pin.svg',
+                      IconAssets.pin,
                       width: 20.w,
                       height: 20.h,
                     ),
-                    SizedBox(width: 10.w),
+                    AppSpacing.w10,
                     Expanded(
                       child: Text(
                         location,
@@ -371,7 +373,7 @@ class EventCard extends StatelessWidget {
                   ],
                 ),
               ],
-              SizedBox(height: 10.h),
+              AppSpacing.h10,
             ],
           ),
         ),

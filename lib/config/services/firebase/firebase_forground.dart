@@ -1,6 +1,7 @@
 import 'package:alarm/alarm.dart';
 import 'package:firebase_messaging/firebase_messaging.dart' hide NotificationSettings;
 import 'package:time_verse/config/services/alerm_notification_service.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 
 // @pragma('vm:entry-point')
 // Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
@@ -19,7 +20,7 @@ import 'package:time_verse/config/services/alerm_notification_service.dart';
 //     alarmSettings: AlarmSettings(
 //       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
 //       dateTime: DateTime.now().add(const Duration(seconds: 1)),
-//       assetAudioPath: 'assets/alarm.mp3',
+//       assetAudioPath: AudioAssets.alarm,
 //       loopAudio: true,
 //       vibrate: true,
 //       volumeSettings: VolumeSettings.fixed(volume: 1.0),
@@ -48,7 +49,7 @@ Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
   final String payload = rawEventId?.toString() ?? '/home';
 
   // Always use a valid local asset path for alarm audio in FCM background
-  const String fallbackAssetPath = 'assets/alarm.mp3';
+  const String fallbackAssetPath = AudioAssets.alarm;
 
   await NotificationService.scheduleNotification(
     id: alarmId,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 
 class ThemedBackgroundWrapper extends StatelessWidget {
   final Widget child;
@@ -9,8 +10,8 @@ class ThemedBackgroundWrapper extends StatelessWidget {
     //!-------- Check current brightness -------------!
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final String backgroundAsset = isDarkMode
-        ? 'assets/images/bg_dark5.png' 
-        : 'assets/images/bg_light.png';
+        ? ImageAssets.bgDark5 
+        : ImageAssets.bgLight;
 
     return Stack(
       children: <Widget>[

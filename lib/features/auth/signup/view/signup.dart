@@ -13,6 +13,8 @@ import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_dialogue.dart';
 import 'package:time_verse/core/components/custom_drop_down.dart';
 import 'package:time_verse/core/components/custom_image_uploader.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/components/custom_input_field.dart';
 import 'package:time_verse/core/components/social_action_button.dart';
 import 'package:time_verse/core/utils/colors.dart';
@@ -27,31 +29,30 @@ class Signup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final googleServices = GoogleServices();
-    final signupController = Provider.of<SignupController>(context, listen: false);
+    final signupController = Provider.of<SignupController>(
+      context,
+      listen: false,
+    );
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final String logoAsset = isDarkMode
-      ? 'assets/images/logo.png' 
-      : 'assets/images/logo_light.png';
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ? ImageAssets.logo
+        : ImageAssets.logoLight;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       googleServices.init();
     });
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body:Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24,vertical: 40),
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 40),
         child: SingleChildScrollView(
           child: Column(
             //mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Image.asset(
-                  logoAsset,
-                  width:124.w,
-                  height: 124.h,
-                ),
+                child: Image.asset(logoAsset, width: 124.w, height: 124.h),
               ),
-              SizedBox(height: 10.h,),
+              AppSpacing.h10,
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -62,12 +63,14 @@ class Signup extends StatelessWidget {
                       'Create your account',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.playfairDisplay(
-                        fontSize: 32.sp, 
+                        fontSize: 32.sp,
                         fontWeight: FontWeight.bold,
-                        color: isDarkMode? AppColors.third_color: AppColors.new_clr, 
+                        color: isDarkMode
+                            ? AppColors.third_color
+                            : AppColors.new_clr,
                       ),
                     ),
-                    SizedBox(height: 12.h,), 
+                    AppSpacing.h12,
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 24.w,
@@ -78,24 +81,23 @@ class Signup extends StatelessWidget {
                         style: GoogleFonts.outfit(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w400,
-                          color: const Color(0xFF9EACBA,), 
-                          height:1.5, 
+                          color: const Color(0xFF9EACBA),
+                          height: 1.5,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Container(
-                padding: EdgeInsets.all(24),
+                padding: EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: isDarkMode ? AppColors.containers_bgd : AppColors.background_color,
+                  color: isDarkMode
+                      ? AppColors.containers_bgd
+                      : AppColors.background_color,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color:  AppColors.fourth_color ,
-                    width: 0.5,
-                  ),
+                  border: Border.all(color: AppColors.fourth_color, width: 0.5),
                 ),
                 child: Column(
                   children: [
@@ -105,24 +107,28 @@ class Signup extends StatelessWidget {
                           child: CustomInputField(
                             label: 'First Name *',
                             hintText: 'Enter your first name...',
-                            controller: signupController.firstNameController, // Updated controller
+                            controller: signupController
+                                .firstNameController, // Updated controller
                             isPassword: false,
                             fontSize: 13.sp,
                           ),
                         ),
-                        SizedBox(width: 15.w), // Adjust width as per your design
+                        SizedBox(
+                          width: 15.w,
+                        ), // Adjust width as per your design
                         Expanded(
                           child: CustomInputField(
                             label: 'Last Name *',
                             hintText: 'Enter your last name...',
-                            controller: signupController.surnameController, // Updated controller
+                            controller: signupController
+                                .surnameController, // Updated controller
                             isPassword: false,
                             fontSize: 13.sp,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 20.h),
+                    AppSpacing.h20,
                     CustomInputField(
                       label: 'Email Address *',
                       hintText: 'Enter your email address...',
@@ -130,7 +136,7 @@ class Signup extends StatelessWidget {
                       isPassword: false,
                       fontSize: 13.sp,
                     ),
-                    SizedBox(height: 20.h,),
+                    AppSpacing.h20,
                     Row(
                       children: [
                         // --- Gender Dropdown ---
@@ -139,23 +145,7 @@ class Signup extends StatelessWidget {
                             label: "Select Gender*",
                             hintText: "Choose one",
                             value: signupController.selectedgender,
-                            items: ["Male", "Female", "Other"].map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (newValue) => signupController.updateGender(newValue),
-                          ),
-                        ),
-                        SizedBox(width: 15.w), // Space between the two dropdowns
-                        // --- Nationality Dropdown ---
-                        Expanded(
-                          child: CustomDropdownField<String>(
-                            label: "Nationality*",
-                            hintText: "Select",
-                            value: signupController.selectedNationality,
-                            items: ["American", "British", "Canadian", "Other"].map((
+                            items: ["Male", "Female", "Other"].map((
                               String value,
                             ) {
                               return DropdownMenuItem<String>(
@@ -163,12 +153,34 @@ class Signup extends StatelessWidget {
                                 child: Text(value),
                               );
                             }).toList(),
-                            onChanged: (newValue) => signupController.updateNationality(newValue),
+                            onChanged: (newValue) =>
+                                signupController.updateGender(newValue),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 15.w,
+                        ), // Space between the two dropdowns
+                        // --- Nationality Dropdown ---
+                        Expanded(
+                          child: CustomDropdownField<String>(
+                            label: "Nationality*",
+                            hintText: "Select",
+                            value: signupController.selectedNationality,
+                            items: ["American", "British", "Canadian", "Other"]
+                                .map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                })
+                                .toList(),
+                            onChanged: (newValue) =>
+                                signupController.updateNationality(newValue),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 20.h),
+                    AppSpacing.h20,
                     Column(
                       children: [
                         CustomInputField(
@@ -178,23 +190,24 @@ class Signup extends StatelessWidget {
                           isPassword: true,
                           fontSize: 13.sp,
                         ),
-                        SizedBox(height: 20.h),
+                        AppSpacing.h20,
                         CustomInputField(
                           label: 'Confirm Password *',
                           hintText: 'Enter confirm password...',
-                          controller: signupController.confirm_passwordController,
+                          controller:
+                              signupController.confirm_passwordController,
                           isPassword: true,
                           fontSize: 13.sp,
                         ),
                       ],
                     ),
-                    SizedBox(height: 20.h,),
+                    AppSpacing.h20,
                     Consumer<SignupController>(
                       builder: (context, controller, _) => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ImagePickerBox(
-                            svgAsset: 'assets/icons/singup_camera.svg',
+                            svgAsset: IconAssets.signupCamera,
                             onTap: controller.pickImage,
                           ),
                           if (controller.pickedImagePath != null)
@@ -216,18 +229,18 @@ class Signup extends StatelessWidget {
                                   fontSize: 12,
                                   color: Colors.black87,
                                 ),
-                              overflow: TextOverflow.ellipsis,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              
+
               // 🛠️ CHECKBOX EXTENSION ROW INJECTED HERE
-              SizedBox(height: 16.h),
+              AppSpacing.h16,
               ValueListenableBuilder<bool>(
                 valueListenable: _isTermsAgreed,
                 builder: (context, isAgreed, child) {
@@ -243,37 +256,54 @@ class Signup extends StatelessWidget {
                             value: isAgreed,
                             activeColor: AppColors.third_color,
                             checkColor: Colors.black,
-                            side: BorderSide(color: AppColors.fourth_color, width: 1.5),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                            side: BorderSide(
+                              color: AppColors.fourth_color,
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                             onChanged: (bool? value) {
-                              _isTermsAgreed.value = value ?? false; // Updates the listener state cleanly
+                              _isTermsAgreed.value =
+                                  value ??
+                                  false; // Updates the listener state cleanly
                             },
                           ),
                         ),
-                        SizedBox(width: 8.w),
+                        AppSpacing.w8,
                         Expanded(
                           child: RichText(
                             text: TextSpan(
                               style: GoogleFonts.outfit(
                                 fontSize: 13.sp,
-                                color: isDarkMode ? AppColors.text_color : AppColors.heading_color,
+                                color: isDarkMode
+                                    ? AppColors.text_color
+                                    : AppColors.heading_color,
                               ),
                               children: [
                                 const TextSpan(text: 'I agree to the '),
                                 TextSpan(
                                   text: 'Terms & Conditions',
-                                  style: TextStyle(color: AppColors.third_color, fontWeight: FontWeight.w600),
-                                  recognizer: TapGestureRecognizer()..onTap = () {
-                                    // Handle Terms Navigation Action
-                                  },
+                                  style: TextStyle(
+                                    color: AppColors.third_color,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      // Handle Terms Navigation Action
+                                    },
                                 ),
                                 const TextSpan(text: ' and '),
                                 TextSpan(
                                   text: 'Privacy Policy',
-                                  style: TextStyle(color: AppColors.third_color, fontWeight: FontWeight.w600),
-                                  recognizer: TapGestureRecognizer()..onTap = () {
-                                    // Handle Privacy Policy Navigation Action
-                                  },
+                                  style: TextStyle(
+                                    color: AppColors.third_color,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      // Handle Privacy Policy Navigation Action
+                                    },
                                 ),
                               ],
                             ),
@@ -284,7 +314,7 @@ class Signup extends StatelessWidget {
                   );
                 },
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Center(
                 child: CustomButton(
                   text: "Create  Account",
@@ -319,18 +349,18 @@ class Signup extends StatelessWidget {
                   width: double.infinity,
                 ),
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Row(
                 children: [
                   Expanded(
                     child: Container(
-                      height: 1.5, 
-                      margin: EdgeInsets.only(right: 12.w), 
+                      height: 1.5,
+                      margin: EdgeInsets.only(right: 12.w),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(0.0), 
-                            Colors.white.withOpacity(0.65), 
+                            Colors.white.withOpacity(0.0),
+                            Colors.white.withOpacity(0.65),
                           ],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
@@ -342,7 +372,9 @@ class Signup extends StatelessWidget {
                   Text(
                     'Or continue with',
                     style: GoogleFonts.inter(
-                      color: const Color(0xFF9E9E9E), // Muted grey color matching the image text
+                      color: const Color(
+                        0xFF9E9E9E,
+                      ), // Muted grey color matching the image text
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w500,
                     ),
@@ -351,12 +383,12 @@ class Signup extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 1.5,
-                      margin: EdgeInsets.only(left: 12.w), 
+                      margin: EdgeInsets.only(left: 12.w),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withOpacity(0.55,),
-                            Colors.white.withOpacity(0.0,), 
+                            Colors.white.withOpacity(0.55),
+                            Colors.white.withOpacity(0.0),
                           ],
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
@@ -366,12 +398,12 @@ class Signup extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 20.h,),
-               Center(
+              AppSpacing.h20,
+              Center(
                 child: SocialAuthButton(
                   text: 'Sign in with Google',
                   icon: SvgPicture.asset(
-                    'assets/icons/gmail.svg',
+                    IconAssets.gmail,
                     fit: BoxFit.contain,
                   ),
                   onTap: () async {
@@ -412,7 +444,7 @@ class Signup extends StatelessWidget {
                   },
                 ),
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -422,10 +454,10 @@ class Signup extends StatelessWidget {
                         fontWeight: FontWeight.normal,
                         fontSize: 13.sp,
                         color: isDarkMode
-                          ? AppColors.text_color
-                          : AppColors.heading_color,
-                        ),
-                        children: [
+                            ? AppColors.text_color
+                            : AppColors.heading_color,
+                      ),
+                      children: [
                         const TextSpan(text: 'Already have an account? '),
                         TextSpan(
                           text: 'Login',
@@ -433,12 +465,13 @@ class Signup extends StatelessWidget {
                             fontSize: 13.sp,
                             fontWeight: FontWeight.normal,
                             color: isDarkMode
-                              ? AppColors.third_color
-                              : AppColors.heading_color,
-                            ),
-                          recognizer: TapGestureRecognizer()..onTap = () {
-                            context.push('/login');
-                          },
+                                ? AppColors.third_color
+                                : AppColors.heading_color,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              context.push('/login');
+                            },
                         ),
                       ],
                     ),

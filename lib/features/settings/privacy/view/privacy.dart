@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_header.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/privacy/controller/privacy_policy_controller.dart';
 
@@ -32,7 +33,7 @@ class Privacy extends StatelessWidget {
                 leftSpacing: 60.w,
                 rightSpacing: 60.w,
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -66,7 +67,7 @@ class Privacy extends StatelessWidget {
                         color: const Color(0xFFFFB703), // Gold tone
                         size: 54.sp,
                       ),
-                      SizedBox(width: 18.w),
+                      AppSpacing.w18,
                       // Text Layout Stack
                       Expanded(
                         child: Column(
@@ -81,7 +82,7 @@ class Privacy extends StatelessWidget {
                                 color: const Color(0xFFFFB703),
                               ),
                             ),
-                            SizedBox(height: 6.h),
+                            AppSpacing.h6,
                             Text(
                               'We are committed to protecting your trust and personal information.', // Description text
                               style: GoogleFonts.outfit(
@@ -100,7 +101,7 @@ class Privacy extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 22.h),

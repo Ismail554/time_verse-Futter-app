@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 class SettingsItem {
   final String label;
@@ -89,7 +90,7 @@ class SettingsSection extends StatelessWidget {
                             BlendMode.srcIn,
                           ),
                         ),
-                        SizedBox(width: 14.w),
+                        AppSpacing.w14,
                         
                         // Text Layout (Title + Subtitle)
                         Expanded(
@@ -108,7 +109,7 @@ class SettingsSection extends StatelessWidget {
                                 ),
                               ),
                               if (item.subtitle != null) ...[
-                                SizedBox(height: 2.h),
+                                AppSpacing.h2,
                                 Text(
                                   item.subtitle!,
                                   style: GoogleFonts.outfit(
@@ -119,7 +120,7 @@ class SettingsSection extends StatelessWidget {
                                 ),
                               ],
                               if (item.statusText != null) ...[
-                                SizedBox(height: 4.h),
+                                AppSpacing.h4,
                                 Text(
                                   item.statusText!,
                                   style: GoogleFonts.outfit(
@@ -132,7 +133,7 @@ class SettingsSection extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SizedBox(width: 8.w),
+                        AppSpacing.w8,
                         
                         // Right-side structural chevron directional arrows
                         Icon(
@@ -148,7 +149,7 @@ class SettingsSection extends StatelessWidget {
             );
           }).toList(),
         ),
-        SizedBox(height: 12.h),
+        AppSpacing.h12,
       ],
     );
   }

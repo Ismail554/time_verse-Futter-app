@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/theme/theme_provider.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/subscription/controller/subscription_controller.dart';
 
@@ -129,7 +131,7 @@ class Subscription extends StatelessWidget {
               child: _getExactFeatureIcon(index),
             ),
           ),
-          SizedBox(width: 14.w),
+          AppSpacing.w14,
           Expanded(
             child: Text(
               text,
@@ -191,7 +193,7 @@ class Subscription extends StatelessWidget {
                       constraints: const BoxConstraints(),
                       icon: SvgPicture.asset(
                         isDarkMode
-                        ? 'assets/icons/arrow_back.svg' : 'assets/icons/arrow_back_light.svg',
+                        ? IconAssets.arrowBack : IconAssets.arrowBackLight,
                         width: 37.w,
                         height: 37.h,
                       ),
@@ -203,21 +205,21 @@ class Subscription extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       icon: SvgPicture.asset(
-                        isDarkMode ? 'assets/icons/theme_dark.svg' : 'assets/icons/light_theme.svg',
+                        isDarkMode ? IconAssets.themeDark : IconAssets.lightTheme,
                         width: 37.w,
                         height: 37.h,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 15.h),
+                AppSpacing.h15,
                 Image.asset(
-                  'assets/images/premium_logo.png',
+                  ImageAssets.premiumLogo,
                   width: 50.w,
                   height: 50.h,
                   fit: BoxFit.contain,
                 ),
-                SizedBox(height: 12.h),
+                AppSpacing.h12,
                 Text(
                   'Welcome To',
                   style: GoogleFonts.lora(
@@ -226,7 +228,7 @@ class Subscription extends StatelessWidget {
                     color: isDarkMode ? Colors.white : AppColors.heading_color,
                   ),
                 ),
-                SizedBox(height: 12.h),
+                AppSpacing.h12,
                 RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
@@ -251,7 +253,7 @@ class Subscription extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 8.h),
+                AppSpacing.h8,
                 Text(
                   'Start Your 14 Day\nFree Trial',
                   textAlign: TextAlign.center,
@@ -262,7 +264,7 @@ class Subscription extends StatelessWidget {
                     height: 1.25,
                   ),
                 ),
-                SizedBox(height: 14.h),
+                AppSpacing.h14,
                 Text(
                   'Unlock Daily Wisdom, Premium Reminders,\nSaved Inspiration, And Deeper\nPersonal Insights.',
                   textAlign: TextAlign.center,
@@ -273,7 +275,7 @@ class Subscription extends StatelessWidget {
                     color: const Color(0xFF9CA3AF),
                   ),
                 ),
-                SizedBox(height: 28.h),
+                AppSpacing.h28,
 
                 // ✅ 1. Features Block Container
                 Consumer<SubscriptionController>(
@@ -307,7 +309,7 @@ class Subscription extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(height: 18.h),
+                AppSpacing.h18,
 
                 // ✅ 2. Pricing Box Container
                 Consumer<SubscriptionController>(
@@ -344,7 +346,7 @@ class Subscription extends StatelessWidget {
                                     color: const Color(0xFFFFB703),
                                   ),
                                 ),
-                                SizedBox(height: 4.h),
+                                AppSpacing.h4,
                                 RichText(
                                   text: TextSpan(
                                     style: GoogleFonts.outfit(
@@ -378,7 +380,7 @@ class Subscription extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                SizedBox(height: 12.h),
+                                AppSpacing.h12,
                                 Row(
                                   children: [
                                     const Icon(
@@ -386,7 +388,7 @@ class Subscription extends StatelessWidget {
                                       color: Color(0xFF10B981),
                                       size: 16,
                                     ),
-                                    SizedBox(width: 4.w),
+                                    AppSpacing.w4,
                                     Expanded(
                                       child: Text(
                                         'No Charge Today',
@@ -399,13 +401,13 @@ class Subscription extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    SizedBox(width: 12.w),
+                                    AppSpacing.w12,
                                     const Icon(
                                       Icons.check_circle_outline,
                                       color: Color(0xFF10B981),
                                       size: 16,
                                     ),
-                                    SizedBox(width: 4.w),
+                                    AppSpacing.w4,
                                     Expanded(
                                       child: Text(
                                         'Cancel Anytime',
@@ -421,9 +423,9 @@ class Subscription extends StatelessWidget {
                               ],
                             ),
                           ),
-                          SizedBox(width: 8.w),
+                          AppSpacing.w8,
                           Image.asset(
-                            'assets/images/crown.png',
+                            ImageAssets.crown,
                             width: 88.w,
                             height: 81.h,
                           ),
@@ -432,7 +434,7 @@ class Subscription extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(height: 22.h),
+                AppSpacing.h22,
                 // Main CTA Purchase Button
                 Consumer<SubscriptionController>(
                   builder: (context, subController, child) {
@@ -507,7 +509,7 @@ class Subscription extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(height: 20.h),
+                AppSpacing.h20,
 
                 // Secondary Action Dismiss Button
                 GestureDetector(
@@ -523,7 +525,7 @@ class Subscription extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(height: 24.h),
+                AppSpacing.h24,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -532,7 +534,7 @@ class Subscription extends StatelessWidget {
                       color: Color(0xFF10B981),
                       size: 14,
                     ),
-                    SizedBox(width: 6.w),
+                    AppSpacing.w6,
                     Text(
                       'Safe & Secure',
                       style: GoogleFonts.outfit(
@@ -544,7 +546,7 @@ class Subscription extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 10.h),
+                AppSpacing.h10,
               ],
             ),
           ),

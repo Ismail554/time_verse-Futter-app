@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_header.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/terms_condition/controller/terms_controller.dart';
 
@@ -30,7 +31,7 @@ class TermsAndCondition extends StatelessWidget {
                 leftSpacing: 60.w,
                 rightSpacing: 30.w,
               ),
-              SizedBox(height: 20.h),
+              AppSpacing.h20,
               Container(
                 padding: EdgeInsets.all(10.sp),
                 decoration: BoxDecoration(
@@ -83,7 +84,7 @@ class TermsAndCondition extends StatelessWidget {
                   },
                 ),
               ),
-              SizedBox(height: 20.h,),
+              AppSpacing.h20,
               Row(
                 children: [
                   Consumer<TermsController>(

@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_header.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/features/settings/notification/controller/notification_controller.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -30,7 +31,7 @@ class NotificationsScreen extends StatelessWidget {
                   leftSpacing: 60.w,
                   rightSpacing: 50.w,
                 ),
-                SizedBox(height: 24.h),
+                AppSpacing.h24,
                 Expanded(
                   child: ListView(
                     physics: const BouncingScrollPhysics(),
@@ -38,7 +39,7 @@ class NotificationsScreen extends StatelessWidget {
                     children: [
                       // --- MAIN ALERTS TOGGLES ---
                       _buildSectionTitle('Alert Preferences'),
-                      SizedBox(height: 12.h),
+                      AppSpacing.h12,
                       _buildSwitchTile(
                         context: context,
                         title: 'Allow Notifications',
@@ -47,9 +48,9 @@ class NotificationsScreen extends StatelessWidget {
                         icon: Icons.notifications_active_outlined,
                         onChanged: controller.setAllowNotifications,
                       ),
-                      SizedBox(height: 12.h),
+                      AppSpacing.h12,
                       _buildSnoozeDurationTile(context: context),
-                      SizedBox(height: 12.h),
+                      AppSpacing.h12,
                       _buildSwitchTile(
                         context: context,
                         title: 'Allow Alarms',
@@ -63,7 +64,7 @@ class NotificationsScreen extends StatelessWidget {
                           }
                         }
                       ),
-                      SizedBox(height: 12.h),
+                      AppSpacing.h12,
                       _buildSwitchTile(
                         context: context,
                         title: 'Vibration',
@@ -73,11 +74,11 @@ class NotificationsScreen extends StatelessWidget {
                         onChanged: controller.setVibrate,
                       ),
 
-                      SizedBox(height: 24.h),
+                      AppSpacing.h24,
 
                       // --- VOLUME CONTROL SLIDERS ---
                       _buildSectionTitle('Audio Volume'),
-                      SizedBox(height: 12.h),
+                      AppSpacing.h12,
                       _buildSliderTile(
                         context: context,
                         title: 'Notification Volume',
@@ -85,7 +86,7 @@ class NotificationsScreen extends StatelessWidget {
                         icon: Icons.volume_down_outlined,
                         onChanged: controller.setNotificationVolume,
                       ),
-                      SizedBox(height: 12.h),
+                      AppSpacing.h12,
                       _buildSliderTile(
                         context: context,
                         title: 'Alarm Volume',
@@ -94,13 +95,13 @@ class NotificationsScreen extends StatelessWidget {
                         onChanged: controller.setAlarmVolume,
                       ),
 
-                      SizedBox(height: 24.h),
+                      AppSpacing.h24,
 
                       // --- SOUND SELECTION ---
                       _buildSectionTitle('Sound Profile'),
-                      SizedBox(height: 12.h),
+                      AppSpacing.h12,
                       _buildRingtoneSelector(context: context),
-                      SizedBox(height: 24.h),
+                      AppSpacing.h24,
                     ],
                   ),
                 ),
@@ -147,7 +148,7 @@ class NotificationsScreen extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon, color: const Color(0xFFFFB703), size: 22.sp),
-          SizedBox(width: 14.w),
+          AppSpacing.w14,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +161,7 @@ class NotificationsScreen extends StatelessWidget {
                     color: isDarkMode ? Colors.white : Colors.black,
                   ),
                 ),
-                SizedBox(height: 2.h),
+                AppSpacing.h2,
                 Text(
                   subtitle,
                   style: GoogleFonts.outfit(
@@ -207,7 +208,7 @@ class NotificationsScreen extends StatelessWidget {
           Row(
             children: [
               Icon(icon, color: const Color(0xFFFFB703), size: 20.sp),
-              SizedBox(width: 12.w),
+              AppSpacing.w12,
               Text(
                 title,
                 style: GoogleFonts.outfit(
@@ -227,7 +228,7 @@ class NotificationsScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 8.h),
+          AppSpacing.h8,
           SliderTheme(
             data: SliderThemeData(
               trackHeight: 4.h,
@@ -276,7 +277,7 @@ class NotificationsScreen extends StatelessWidget {
         child: Row(
           children: [
             Icon(Icons.music_note, color: const Color(0xFFFFB703), size: 22.sp),
-            SizedBox(width: 14.w),
+            AppSpacing.w14,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,7 +290,7 @@ class NotificationsScreen extends StatelessWidget {
                       color: isDarkMode ? Colors.white : Colors.black,
                     ),
                   ),
-                  SizedBox(height: 2.h),
+                  AppSpacing.h2,
                   // 🛠️ CHANGED: Use a consumer or tracking label block to dynamically show the path string state
                   Consumer<NotificationSettingsController>(
                     builder: (context, settings, child) {
@@ -335,7 +336,7 @@ class NotificationsScreen extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.snooze, color: const Color(0xFFFFB703), size: 22.sp),
-          SizedBox(width: 14.w),
+          AppSpacing.w14,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +349,7 @@ class NotificationsScreen extends StatelessWidget {
                     color: isDarkMode ? Colors.white : Colors.black,
                   ),
                 ),
-                SizedBox(height: 2.h),
+                AppSpacing.h2,
                 Text(
                   'Delay duration when snoozing an alarm',
                   style: GoogleFonts.outfit(

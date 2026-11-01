@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_header.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/delete_account/controller/delete_ac_controller.dart';
 
@@ -26,7 +28,7 @@ class DeleteAccount extends StatelessWidget {
               leftSpacing: 60.w,
               rightSpacing: 55.w,
             ),
-            SizedBox(height: 50.h,),
+            AppSpacing.h50,
             Container(
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
               decoration: BoxDecoration(
@@ -55,12 +57,12 @@ class DeleteAccount extends StatelessWidget {
                   // 1. Vector Asset Layer
                   SvgPicture.asset(
                     isDarkMode
-                    ? 'assets/icons/delete_logo.svg'
-                    : 'assets/icons/delete_logo_light.svg',
+                    ? IconAssets.deleteLogo
+                    : IconAssets.deleteLogoLight,
                     width: 90.w,
                     height: 90.h,
                   ),
-                  SizedBox(height: 24.h),
+                  AppSpacing.h24,
 
                   // 2. Section Component Headline
                   Text(
@@ -73,7 +75,7 @@ class DeleteAccount extends StatelessWidget {
                       : const Color(0xFF1F2937),
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  AppSpacing.h12,
 
                   // 3. Informational Message Block
                   Text(
@@ -88,7 +90,7 @@ class DeleteAccount extends StatelessWidget {
                         : const Color(0xFF4B5563),
                     ),
                   ),
-                  SizedBox(height: 24.h),
+                  AppSpacing.h24,
 
                   // 4. Critical Alert Frame Element Block
                   Container(
@@ -108,7 +110,7 @@ class DeleteAccount extends StatelessWidget {
                         Padding(
                           padding: EdgeInsets.only(top: 2.h),
                           child: SvgPicture.asset(
-                            'assets/icons/warning.svg',
+                            IconAssets.warning,
                             width: 18.w,
                             height: 18.h,
                             colorFilter: const ColorFilter.mode(
@@ -117,7 +119,7 @@ class DeleteAccount extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SizedBox(width: 10.w),
+                        AppSpacing.w10,
                         Expanded(
                           child: Text(
                             'Warning: Deleting your account will permanently remove all your data, including your children\'s profiles, events, group memberships, and chat history. This action cannot be undone.',
@@ -132,7 +134,7 @@ class DeleteAccount extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(height: 32.h),
+                  AppSpacing.h32,
                   Consumer<DeleteAcController>(
                     builder: (context, controller, _) {
                       return CustomButton(
@@ -159,7 +161,7 @@ class DeleteAccount extends StatelessWidget {
                       );
                     },
                   ),
-                  SizedBox(height: 14.h),
+                  AppSpacing.h14,
                   CustomButton(
                     text: "Cancel",
                     onPressed: () => Navigator.pop(context),

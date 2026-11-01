@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/features/all_events/model/event_model.dart';
 import 'package:time_verse/features/calender/repository/add_event_repository.dart';
 import 'package:time_verse/features/settings/notification/controller/notification_controller.dart';
@@ -70,7 +71,7 @@ class AlarmHelper {
     }
 
     if (targetRingtonePath.isEmpty) {
-      targetRingtonePath = 'assets/alarm.mp3';
+      targetRingtonePath = AudioAssets.alarm;
     }
 
     for (int i = 0; i < timesToSchedule.length; i++) {

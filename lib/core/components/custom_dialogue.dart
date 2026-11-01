@@ -1,4 +1,5 @@
 // import 'package:flutter/material.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 // Future<void> showErrorDialog(BuildContext context, String message) async {
 //   await showDialog(
@@ -36,6 +37,7 @@
 //   );
 // }
 import 'package:flutter/material.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 
 Future<void> showMessageDialog(
   BuildContext context,
@@ -54,7 +56,7 @@ Future<void> showMessageDialog(
         title: Row(
           children: [
             Icon(icon, color: iconColor),
-            const SizedBox(width: 8),
+            AppSpacing.w8,
             Text(
               title,
               style: TextStyle(
