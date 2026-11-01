@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -15,7 +16,8 @@ class AuthService {
   late final String? _token;
 
   AuthService() {
-    _dio = Dio(BaseOptions(
+    _dio = createDio(
+      options: BaseOptions(
       baseUrl: _baseUrl,
       headers: {'Content-Type': 'application/json'},
       connectTimeout: const Duration(seconds: 10),

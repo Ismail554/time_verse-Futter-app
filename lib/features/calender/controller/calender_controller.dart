@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -19,7 +20,7 @@ class CalendarController extends ChangeNotifier {
 
   final CalendarSyncService _syncService = CalendarSyncService();
   final EventAlarmService _alarmService = EventAlarmService();
-  final Dio _dio = Dio();
+  final Dio _dio = createDio();
 
   DateTime get focusedDay => model.focusedDay;
   DateTime? get selectedDay => model.selectedDay;

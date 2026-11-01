@@ -2,13 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:time_verse/features/auth/auth_model/auth_model.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
 class UserService {
-  Dio _dio = Dio();
+  Dio _dio = createDio();
   final AuthService _authService = AuthService(); 
   final String _baseUrl = dotenv.env['BASE_URL'] ?? '';
 
@@ -19,7 +20,8 @@ class UserService {
   User? get currentUser => _currentUser;
 
   UserService(){
-     _dio = Dio(BaseOptions(
+     _dio = createDio(
+      options: BaseOptions(
       baseUrl: _baseUrl,
       headers: {'Content-Type': 'application/json'},
       connectTimeout: const Duration(seconds: 10),

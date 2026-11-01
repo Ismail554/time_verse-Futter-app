@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 import 'package:time_verse/features/edit_event/model/edit_event_model.dart';
 
 class EditEventRepository {
-  final Dio _dio = Dio();
+  final Dio _dio = createDio();
 
   /// Fetch categories list from API
   Future<List<EditCategoryModel>> getCategories() async {

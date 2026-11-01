@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +11,8 @@ import 'package:time_verse/features/home/model/ai_refelction_model.dart';
 import 'package:time_verse/features/home/model/quotedata_model.dart';
 
 class EventRepository {
-  final Dio _dio = Dio(
+  final Dio _dio = createDio(
+    options:
     BaseOptions(
       baseUrl: dotenv.env['BASE_URL'] ?? '',
       connectTimeout: const Duration(seconds: 10),

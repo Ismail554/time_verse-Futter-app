@@ -11,7 +11,9 @@ import 'package:time_verse/config/app_route/app_prefernce.dart';
 import 'package:time_verse/config/services/google_service.dart';
 import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_dialogue.dart';
+import 'package:time_verse/core/components/animated_success_dialog.dart';
 import 'package:time_verse/core/components/custom_drop_down.dart';
+import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
 import 'package:time_verse/core/components/custom_image_uploader.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/asset_manager.dart';
@@ -290,7 +292,7 @@ class Signup extends StatelessWidget {
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
-                                      // Handle Terms Navigation Action
+                                      context.push('/terms_and_condition');
                                     },
                                 ),
                                 const TextSpan(text: ' and '),
@@ -302,7 +304,7 @@ class Signup extends StatelessWidget {
                                   ),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
-                                      // Handle Privacy Policy Navigation Action
+                                      context.push('/privacy_policy');
                                     },
                                 ),
                               ],
@@ -316,37 +318,115 @@ class Signup extends StatelessWidget {
               ),
               AppSpacing.h20,
               Center(
-                child: CustomButton(
-                  text: "Create  Account",
-                  onPressed: () async {
-                    if (signupController.validateSignupFields()) {
-                      final success = await signupController.signupUser();
-                      if (success) {
-                        if (context.mounted) context.push('/login');
-                      } else {
-                        if (context.mounted) {
-                          await showMessageDialog(
-                            context,
-                            signupController.signupError ?? 'Signup failed',
-                          );
-                        }
-                      }
-                    } else {
-                      if (context.mounted) {
-                        await showMessageDialog(
-                          context,
-                          'Please fill in all fields',
-                        );
-                      }
-                    }
+                child: Consumer<SignupController>(
+                  builder: (context, controller, child) {
+                    return CustomButton(
+                      text: controller.isLoading
+                          ? "Creating Account..."
+                          : "Create  Account",
+                      leadingIcon: controller.isLoading
+                          ? SizedBox(
+                              width: 18.w,
+                              height: 18.h,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2.2,
+                                color: Colors.black,
+                              ),
+                            )
+                          : null,
+                      onPressed: controller.isLoading
+                          ? () {}
+                          : () async {
+                              // 1. Verify Terms & Conditions agreement
+                              if (!_isTermsAgreed.value) {
+                                if (context.mounted) {
+                                  await showMessageDialog(
+                                    context,
+                                    'Please agree to the Terms & Conditions and Privacy Policy to proceed.',
+                                    title: 'Terms Required',
+                                    icon: Icons.info_outline,
+                                    iconColor: AppColors.fourth_color,
+                                  );
+                                }
+                                return;
+                              }
+
+                              // 2. Verify all required fields are filled
+                              if (!controller.validateSignupFields()) {
+                                if (context.mounted) {
+                                  await showMessageDialog(
+                                    context,
+                                    'Please fill in all required fields.',
+                                  );
+                                }
+                                return;
+                              }
+
+                              // 3. Verify passwords match
+                              if (controller.passwordController.text !=
+                                  controller.confirm_passwordController.text) {
+                                if (context.mounted) {
+                                  await showMessageDialog(
+                                    context,
+                                    'Passwords do not match. Please verify your password.',
+                                  );
+                                }
+                                return;
+                              }
+
+                              // 4. Register account & automatically log in
+                              final success =
+                                  await controller.signupAndAutoLogin();
+                              if (success) {
+                                final registeredEmail =
+                                    controller.emailController.text.trim();
+                                final firstName =
+                                    controller.firstNameController.text.trim();
+
+                                if (context.mounted) {
+                                  try {
+                                    await context
+                                        .read<ProfileController>()
+                                        .loadUserProfile();
+                                  } catch (e) {
+                                    debugPrint("Profile load note: $e");
+                                  }
+
+                                  if (context.mounted) {
+                                    await showAnimatedSuccessDialog(
+                                      context: context,
+                                      title: 'Account Created!',
+                                      subtitle:
+                                          'Welcome to InfiniQuote${firstName.isNotEmpty ? ', $firstName' : ''}!\nYour account is ready and you are now signed in.',
+                                      email: registeredEmail,
+                                      buttonText: 'Get Started',
+                                      onContinue: () {
+                                        if (context.mounted) {
+                                          context.go('/home');
+                                        }
+                                      },
+                                    );
+                                  }
+                                }
+                              } else {
+                                if (context.mounted) {
+                                  await showMessageDialog(
+                                    context,
+                                    controller.signupError ??
+                                        'Registration failed. Please try again.',
+                                  );
+                                }
+                              }
+                            },
+                      gradient: AppGradientColors.button_gradient,
+                      textColor: Colors.black,
+                      fontFamily: 'outfit',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      height: 51.h,
+                      width: double.infinity,
+                    );
                   },
-                  gradient: AppGradientColors.button_gradient,
-                  textColor: Colors.black,
-                  fontFamily: 'outfit',
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  height: 51.h,
-                  width: double.infinity,
                 ),
               ),
               AppSpacing.h20,

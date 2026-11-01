@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
@@ -8,7 +9,7 @@ import 'package:time_verse/features/all_events/model/event_model.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
 class AllEventRepository {
-  final Dio _dio = Dio();
+  final Dio _dio = createDio();
 
   String formatEventDate(String rawDate) {
     final startDateTime = DateTime.tryParse(rawDate);

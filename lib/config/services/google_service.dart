@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -117,7 +118,7 @@ class GoogleServices {
 
   Future<void> sendTokensToApi({required String idToken, required String serverAuthCode}) async {
     try {
-      final dio = Dio();
+      final dio = createDio();
       final baseurl = dotenv.env['BASE_URL'];
       final String url = '${baseurl}api/v1/auth/login/idtoken/';
 
@@ -281,7 +282,7 @@ class GoogleServices {
     };
 
     try {
-      final dio = Dio();
+      final dio = createDio();
       final response = await dio.post(
         "https://googleapis.com",
         data: body,
@@ -309,7 +310,7 @@ class GoogleServices {
     DateTime? timeMin,
     DateTime? timeMax,
   }) async {
-    final dio = Dio();
+    final dio = createDio();
     final startStr = (timeMin ?? DateTime.now()).toUtc().toIso8601String();
 
     Map<String, dynamic> queryParameters = {
@@ -385,7 +386,7 @@ class GoogleServices {
     required String accessToken,
     required String eventId,
   }) async {
-    final dio = Dio();
+    final dio = createDio();
     try {
       final response = await dio.delete(
         "https://www.googleapis.com/calendar/v3/calendars/primary/events/$eventId",

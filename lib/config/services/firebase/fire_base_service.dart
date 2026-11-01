@@ -2,6 +2,7 @@
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:time_verse/config/services/alerm_notification_service.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
@@ -70,7 +71,7 @@ class FCMService {
 
   static Future<void> postTokenToBackend(String token) async {
     try {
-      final dio = Dio();
+      final dio = createDio();
       final baseUrl = dotenv.env['BASE_URL'] ?? '';
       final url = '${baseUrl}api/v1/update-fcm-token/';
       final authToken = await AuthService().getToken();

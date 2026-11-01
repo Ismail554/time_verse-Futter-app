@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +10,7 @@ import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
 
 // class CalendarSyncService {
-//   final Dio _dio = Dio();
+//   final Dio _dio = createDio();
 
 //   String normalizeTime(String rawTime) {
 //     if (rawTime.isEmpty) return '';
@@ -200,7 +201,7 @@ import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
 
 class CalendarSyncService {
-  final Dio _dio = Dio();
+  final Dio _dio = createDio();
 
   String normalizeTime(String rawTime) {
     if (rawTime.isEmpty) return '00:00';

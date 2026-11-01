@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 import 'package:time_verse/features/calender/model/event_category_model.dart';
 
 class AddEventRepository {
-  final Dio _dio = Dio();
+  final Dio _dio = createDio();
   final AuthService _authService = AuthService();
   Future<Options> _authorizedHeader() async {
     final token = await _authService.getToken();

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -17,7 +18,7 @@ class EventController extends ChangeNotifier {
   String quoteText = '"Even the tallest tree\nstarts from a small seed. Your Contribution\nmatters."';
   
   final GlobalKey quoteShareKey = GlobalKey();
-  final Dio _dio = Dio();
+  final Dio _dio = createDio();
   EventModel? eventDetail;
 
   Future<void> shareQuoteToSocialMedia([String? explicitText, String? bgAssetPath]) async {

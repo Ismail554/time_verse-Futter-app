@@ -1,11 +1,12 @@
 // ignore_for_file: avoid_print
 
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
 class PrivacyService {
-  final Dio _dio = Dio();
+  final Dio _dio = createDio();
   final AuthService _authService = AuthService();
 
    final String _baseUrl = dotenv.env['BASE_URL'] ?? '';

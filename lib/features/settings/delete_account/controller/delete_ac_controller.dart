@@ -1,5 +1,6 @@
 import 'package:alarm/alarm.dart';
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
@@ -65,7 +66,7 @@ class DeleteAcController extends ChangeNotifier {
       final token = await AuthService().getToken();
       final baseUrl = dotenv.env['BASE_URL'] ?? '';
 
-      final response = await Dio().post(
+      final response = await createDio().post(
         '${baseUrl}api/v1/delete-account/',
         data: {"password": password},
         options: Options(

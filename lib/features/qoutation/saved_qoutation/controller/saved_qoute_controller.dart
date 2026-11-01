@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
+import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -73,7 +74,7 @@ class SavedQouteController extends ChangeNotifier {
     try {
       final authService = AuthService();
       final token = await authService.getToken();
-      final dio = Dio();
+      final dio = createDio();
       final baseUrl = dotenv.env['BASE_URL'] ?? '';
       final url = '${baseUrl}api/v1/event/my-quotes/';
 
@@ -112,7 +113,7 @@ class SavedQouteController extends ChangeNotifier {
     try {
       final authService = AuthService();
       final token = await authService.getToken();
-      final dio = Dio();
+      final dio = createDio();
       final baseUrl = dotenv.env['BASE_URL'] ?? '';
       final url = '${baseUrl}api/v1/event/$eventId/favorite/';
       
