@@ -6,7 +6,6 @@ import 'package:time_verse/core/components/custom_button.dart';
 import 'package:time_verse/core/components/custom_header.dart';
 import 'package:time_verse/core/components/custom_input_field.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
-import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/settings/change_password/controller/changepassowrd_controller.dart';
 
@@ -20,7 +19,7 @@ class ChangePassword extends StatelessWidget {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w,vertical: 32.h),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 32.h),
           child: Column(
             children: [
               CustomHeaderBar(
@@ -30,17 +29,17 @@ class ChangePassword extends StatelessWidget {
               ),
               AppSpacing.h20,
               Container(
-                padding: EdgeInsets.all(16.w,), 
+                padding: EdgeInsets.all(16.w), 
                 decoration: BoxDecoration(
                   color: isDarkMode
-                  ? const Color(0xFF0B1528)
-                  : Colors.white, 
-                  borderRadius: BorderRadius.circular(16.r,), 
+                      ? const Color(0xFF0B1528)
+                      : Colors.white, 
+                  borderRadius: BorderRadius.circular(16.r), 
                   border: Border.all(
                     color: isDarkMode
-                    // ignore: deprecated_member_use
-                    ? const Color(0xFFFFB703).withOpacity(0.2,) // Amber luxury thin line border
-                    : const Color(0xFFE5E7EB),
+                        // ignore: deprecated_member_use
+                        ? const Color(0xFFFFB703).withOpacity(0.2)
+                        : const Color(0xFFE5E7EB),
                     width: 1.2,
                   ),
                   boxShadow: [
@@ -60,36 +59,30 @@ class ChangePassword extends StatelessWidget {
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w500,
                         color: isDarkMode
-                        ? Colors.white
-                        : const Color(0xFF1F2937),
+                            ? Colors.white
+                            : const Color(0xFF1F2937),
                       ),
                     ),
                     AppSpacing.h8,
                     CustomInputField(
                       label: '',
-                      hintText:'***********', 
+                      hintText: '***********', 
                       controller: changepassowrdController.old_passwordController,
                       isPassword: true,
                       fontSize: 16.sp,
                       height: 52.h, 
                       hintFontSize: 16.sp,
-                      //prefixSvgPath: IconAssets.lockIcon,
-                      // prefixIconColor: isDarkMode
-                      //     ? const Color(0xFFFFB703)
-                      //     : const Color(0xFF353535),
                       suffixIconColor: Colors.white,
                     ),
                     AppSpacing.h18,
-        
-                    // 2. New Password Section
                     Text(
                       'New Password',
                       style: GoogleFonts.outfit(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w500,
                         color: isDarkMode
-                        ? Colors.white
-                        : const Color(0xFF1F2937),
+                            ? Colors.white
+                            : const Color(0xFF1F2937),
                       ),
                     ),
                     AppSpacing.h8,
@@ -101,41 +94,31 @@ class ChangePassword extends StatelessWidget {
                       fontSize: 16.sp,
                       height: 52.h,
                       hintFontSize: 16.sp,
-                      // prefixSvgPath: IconAssets.lockIcon,
-                      // prefixIconColor: isDarkMode
-                      // ? const Color(0xFFFFB703)
-                      // : const Color(0xFF353535),
                       suffixIconColor: Colors.white,
                     ),
                     AppSpacing.h18,
-                    // 3. Confirm Password Section
                     Text(
                       'Confirm Password',
                       style: GoogleFonts.outfit(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w500,
                         color: isDarkMode
-                        ? Colors.white
-                        : const Color(0xFF1F2937),
+                            ? Colors.white
+                            : const Color(0xFF1F2937),
                       ),
                     ),
                     AppSpacing.h8,
                     CustomInputField(
                       label: '',
                       hintText: '***********',
-                      controller:changepassowrdController.confirm_passwordController,
+                      controller: changepassowrdController.confirm_passwordController,
                       isPassword: true,
                       fontSize: 16.sp,
                       height: 52.h,
                       hintFontSize: 16.sp,
-                      // prefixSvgPath: IconAssets.lockIcon,
-                      // prefixIconColor: isDarkMode
-                      // ? const Color(0xFFFFB703)
-                      // : const Color(0xFF353535),
                       suffixIconColor: Colors.white,
                     ),
                     AppSpacing.h24,
-                    // Action Submission Button Layer
                     CustomButton(
                       text: "Update",
                       onPressed: () {

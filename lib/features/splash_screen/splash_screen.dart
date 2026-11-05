@@ -1,11 +1,12 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'dart:async';
 import 'package:go_router/go_router.dart';
 import 'package:time_verse/config/app_route/app_prefernce.dart';
 import 'package:time_verse/core/utils/asset_manager.dart';
-//import 'package:time_verse/core/components/mood_tracker/mood_tracker_popup.dart'; 
+import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,51 +23,32 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateNext() async {
-    await Future.delayed(const Duration(seconds: 3));
-
-    final isFirstLaunch = await AppPrefs.isFirstLaunch();
-    final isLoggedIn = await AppPrefs.isLoggedIn();
-    final isRememberMe = await AppPrefs.isRememberMeEnabled();
-    final isGoogleLogin = await AppPrefs.isGoogleLogin();
-    final googleToken = isGoogleLogin ? await AppPrefs.getGoogleToken() : null;
+    await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
-    final shouldForceLogin = isGoogleLogin && (googleToken == null || googleToken.isEmpty);
-    final isSessionValid = isGoogleLogin ? !shouldForceLogin : isRememberMe;
-
+    final isFirstLaunch = await AppPrefs.isFirstLaunch();
     if (isFirstLaunch) {
       await AppPrefs.setFirstLaunch(false);
-      context.push('/landing');
-    } else if (isLoggedIn && isSessionValid) {
-      /* 
-      final shouldShowMood = await AppPrefs.shouldShowMoodTrackerToday();
+      context.go('/landing');
+      return;
+    }
 
-      if (!mounted) return;
+    final authService = AuthService();
+    final hasValidSession = await authService.isLoggedIn();
 
-      if (shouldShowMood) {
-        await AppPrefs.markMoodTrackerShownToday();
-        if (!mounted) return;
+    if (!mounted) return;
 
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          barrierColor: Colors.black.withOpacity(0.5),
-          builder: (dialogContext) => const MoodTrackerPopup(),
-        ).then((_) {
-          if (context.mounted) context.push('/home');
-        });
-      } else {
-        context.push('/home');
-      }
-      */
-      context.push('/home');
+    if (hasValidSession) {
+      context.go('/home');
     } else {
+      // Clear expired or invalid session state
+      await authService.clearToken();
+      await AppPrefs.setLoggedIn(false);
       await AppPrefs.setGoogleLogin(false);
       await AppPrefs.clearGoogleToken();
-      await AppPrefs.setLoggedIn(false);
 
-      context.push('/login');
+      context.go('/login');
     }
   }
 

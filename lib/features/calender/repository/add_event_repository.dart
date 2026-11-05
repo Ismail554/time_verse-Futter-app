@@ -8,7 +8,8 @@ import 'package:time_verse/features/calender/model/event_category_model.dart';
 class AddEventRepository {
   final Dio _dio = createDio();
   final AuthService _authService = AuthService();
-  Future<Options> _authorizedHeader() async {
+
+  Future<Options> _authorizedHeader({String? idempotencyKey}) async {
     final token = await _authService.getToken();
 
     return Options(
@@ -16,12 +17,13 @@ class AddEventRepository {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        if (idempotencyKey != null && idempotencyKey.isNotEmpty)
+          'Idempotency-Key': idempotencyKey,
       },
     );
   }
 
   /// Fetches event categories from backend
-
   Future<List<EventCategory>> fetchCategories() async {
     final baseUrl = dotenv.env['BASE_URL'] ?? '';
     final response = await _dio.get(
@@ -36,7 +38,7 @@ class AddEventRepository {
     return [];
   }
 
-  /// Creates a task on the server
+  /// Creates a task on the server with idempotency protection (Section 7.2)
   Future<Map<String, dynamic>?> createTask({
     required String title,
     required String date,
@@ -49,10 +51,14 @@ class AddEventRepository {
     String? note,
     String? repeat,
     Map<String, dynamic>? customRepeat,
+    String? idempotencyKey,
   }) async {
     final baseUrl = dotenv.env['BASE_URL'] ?? '';
     final url = "${baseUrl}api/v1/event/create/";
     final bool isCustom = repeat?.toLowerCase() == 'custom';
+
+    final effectiveIdempotencyKey = idempotencyKey ??
+        'tv_app_${DateTime.now().millisecondsSinceEpoch}_${title.hashCode.abs()}';
 
     final Map<String, dynamic> body = {
       "title": title,
@@ -71,11 +77,11 @@ class AddEventRepository {
       if (note?.trim().isNotEmpty ?? false)
         "type_event_description": note!.trim(),
     };
- 
+
     final response = await _dio.post(
       url,
       data: body,
-      options: await _authorizedHeader(),
+      options: await _authorizedHeader(idempotencyKey: effectiveIdempotencyKey),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -100,18 +106,30 @@ class AddEventRepository {
 
     int intervalCount = 1;
     String intervalUnit = 'none';
+    final normalizedRepeat = selectedRepeat?.trim().toLowerCase() ?? '';
 
-    if (selectedRepeat == 'Custom') {
+    if (normalizedRepeat == 'custom') {
       intervalCount = customRepeatCount > 0 ? customRepeatCount : 1;
-      intervalUnit = customRepeatUnit.toLowerCase();
-    } else if (selectedRepeat != null && selectedRepeat != "Don't repeat") {
-      if (selectedRepeat == 'Every 1 day') {
+      final rawUnit = customRepeatUnit.trim().toLowerCase();
+      if (rawUnit.startsWith('day')) {
         intervalUnit = 'day';
-      } else if (selectedRepeat == 'Every 1 week') {
+      } else if (rawUnit.startsWith('week')) {
         intervalUnit = 'week';
-      } else if (selectedRepeat == 'Every 1 month') {
+      } else if (rawUnit.startsWith('month')) {
         intervalUnit = 'month';
-      } else if (selectedRepeat == 'Every 1 year') {
+      } else if (rawUnit.startsWith('year')) {
+        intervalUnit = 'year';
+      }
+    } else if (normalizedRepeat.isNotEmpty &&
+        normalizedRepeat != "don't repeat" &&
+        normalizedRepeat != 'none') {
+      if (normalizedRepeat == 'every 1 day' || normalizedRepeat == 'daily' || normalizedRepeat == 'day') {
+        intervalUnit = 'day';
+      } else if (normalizedRepeat == 'every 1 week' || normalizedRepeat == 'weekly' || normalizedRepeat == 'week') {
+        intervalUnit = 'week';
+      } else if (normalizedRepeat == 'every 1 month' || normalizedRepeat == 'monthly' || normalizedRepeat == 'month') {
+        intervalUnit = 'month';
+      } else if (normalizedRepeat == 'every 1 year' || normalizedRepeat == 'yearly' || normalizedRepeat == 'year') {
         intervalUnit = 'year';
       }
     }
@@ -123,17 +141,41 @@ class AddEventRepository {
 
     DateTime current = startDateTime;
     int count = 0;
+    int safetyIterations = 0;
 
-    final selectedDayIndices = selectedDays.map((d) {
-      final parts = d.split('-');
-      return parts.length > 1 ? int.tryParse(parts[1]) ?? -1 : -1;
-    }).where((idx) => idx != -1).toList();
+    const rfcDayToIndex = <String, int>{
+      'SU': 0,
+      'MO': 1,
+      'TU': 2,
+      'WE': 3,
+      'TH': 4,
+      'FR': 5,
+      'SA': 6,
+    };
 
-    while (count < maxLimit) {
-      if (repeatEndType == 'On' && current.isAfter(customEndDate)) {
+    final selectedDayIndices = selectedDays
+        .map((d) {
+          final upper = d.trim().toUpperCase();
+          if (rfcDayToIndex.containsKey(upper)) {
+            return rfcDayToIndex[upper]!;
+          }
+          final parts = d.split('-');
+          return parts.length > 1 ? int.tryParse(parts[1]) ?? -1 : -1;
+        })
+        .where((idx) => idx >= 0 && idx <= 6)
+        .toSet()
+        .toList();
+
+    final normalizedEndType = repeatEndType.trim().toLowerCase();
+
+    while (count < maxLimit && safetyIterations < 1500) {
+      safetyIterations++;
+      if ((normalizedEndType == 'on' || normalizedEndType == 'on_date') &&
+          current.isAfter(customEndDate)) {
         break;
       }
-      if (repeatEndType == 'After' && count >= customOccurrences) {
+      if ((normalizedEndType == 'after' || normalizedEndType == 'after_occurrences') &&
+          count >= customOccurrences) {
         break;
       }
 
@@ -193,10 +235,12 @@ class AddEventRepository {
   Future<Map<String, dynamic>?> createTaskRaw(Map<String, dynamic> body) async {
     final baseUrl = dotenv.env['BASE_URL'] ?? '';
     final url = "${baseUrl}api/v1/event/create/";
+    final idempotencyKey = body['idempotency_key']?.toString();
+
     final response = await _dio.post(
       url,
       data: body,
-      options: await _authorizedHeader(),
+      options: await _authorizedHeader(idempotencyKey: idempotencyKey),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:time_verse/config/app_route/app_prefernce.dart';
 import 'package:time_verse/config/services/google_service.dart';
+import 'package:time_verse/core/utils/validators.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
 class SignupController extends ChangeNotifier {
@@ -38,13 +39,44 @@ class SignupController extends ChangeNotifier {
     return true;
   }
 
+  /// Validates all signup input fields and returns a specific, user-friendly error message
+  /// if any field fails validation, or null if all fields are valid.
+  String? validateSignupInput({required bool isTermsAgreed}) {
+    final termsError = Validators.validateTerms(isTermsAgreed);
+    if (termsError != null) return termsError;
+
+    final firstNameError = Validators.validateName(
+      firstNameController.text,
+      fieldName: 'first name',
+    );
+    if (firstNameError != null) return firstNameError;
+
+    final surnameError = Validators.validateName(
+      surnameController.text,
+      fieldName: 'surname',
+    );
+    if (surnameError != null) return surnameError;
+
+    final emailError = Validators.validateEmail(emailController.text);
+    if (emailError != null) return emailError;
+
+    final passwordError = Validators.validatePassword(
+      passwordController.text,
+      minLength: 8,
+    );
+    if (passwordError != null) return passwordError;
+
+    final confirmError = Validators.validateConfirmPassword(
+      passwordController.text,
+      confirm_passwordController.text,
+    );
+    if (confirmError != null) return confirmError;
+
+    return null;
+  }
+
   bool validateSignupFields() {
-    return areFieldsFilled([
-      emailController,
-      firstNameController,
-      passwordController,
-      confirm_passwordController,
-    ]);
+    return validateSignupInput(isTermsAgreed: true) == null;
   }
 
   String? pickedImagePath;
@@ -83,12 +115,6 @@ class SignupController extends ChangeNotifier {
 
       if (response['success'] == true) {
         signupError = null;
-
-        final token = response['data']?['access'];
-        if (token != null) {
-          debugPrint('Signup Access Token: $token');
-        }
-
         return true;
       } else {
         final error = response['error'] ?? response['message'];
@@ -116,19 +142,21 @@ class SignupController extends ChangeNotifier {
         return false;
       }
 
-      final email = emailController.text.trim();
-      final password = passwordController.text.trim();
-
-      // Automatically sign in with the newly registered user
-      final loginResponse = await _authService.login(email, password);
-      if (loginResponse['success'] == true) {
-        await AppPrefs.setLoggedIn(true);
-        await AppPrefs.setFirstLaunch(false);
-        await AppPrefs.setGoogleLogin(false);
-        await GoogleServices().signOut();
-      } else {
-        debugPrint("Auto-login note: ${loginResponse['error']}");
+      // If token wasn't already stored during signup, perform fallback login
+      final hasToken = await _authService.getToken();
+      if (hasToken == null || hasToken.isEmpty) {
+        final email = emailController.text.trim();
+        final password = passwordController.text.trim();
+        final loginResponse = await _authService.login(email, password);
+        if (loginResponse['success'] != true) {
+          debugPrint("Auto-login fallback note: ${loginResponse['error']}");
+        }
       }
+
+      await AppPrefs.setLoggedIn(true);
+      await AppPrefs.setFirstLaunch(false);
+      await AppPrefs.setGoogleLogin(false);
+      await GoogleServices().signOut();
 
       _isLoading = false;
       notifyListeners();

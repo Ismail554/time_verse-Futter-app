@@ -1,14 +1,15 @@
-import 'dart:async';
+// ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/bottom_card_controller/bottom_card_controller.dart';
 import 'package:time_verse/core/components/custom_bottomnav.dart';
 import 'package:time_verse/core/components/custom_header.dart';
-import 'package:time_verse/core/theme/theme_provider.dart';
+import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/features/all_events/controller/all_events.dart';
 import 'package:time_verse/features/all_events/custom_widget/custom_eventcard.dart';
 import 'package:time_verse/features/all_events/custom_widget/event_remove_modal.dart';
@@ -19,90 +20,112 @@ class AllEvents extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<ThemeProvider>(context);
     final location = GoRouterState.of(context).uri.toString();
     final controller = Provider.of<AllEventsController>(context, listen: false);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (controller.events.isEmpty) {
         controller.fetchAllEvents();
       }
       context.read<BottomNavController>().updateIndexFromRoute(location);
     });
+
     return Scaffold(
       extendBody: true,
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w,vertical: 40.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 40.h),
         child: Column(
           children: [
             CustomHeaderBar(
-              title: 'All Events', 
-              leftSpacing: 100, 
-              rightSpacing: 70
+              title: 'All Events',
+              leftSpacing: 100,
+              rightSpacing: 70,
             ),
-            //SizedBox(height: 20.h,),
             Consumer<AllEventsController>(
               builder: (context, controller, _) {
-                final now = DateTime.now();
-                final todayEvents = controller.events.where((e) {
-                  DateTime? parsedDate = DateTime.tryParse(e.createdAt);
-                    if (parsedDate == null && e.date.isNotEmpty) {
-                      try {
-                        parsedDate = DateFormat('EEEE, MMM d, yyyy',).parse(e.date);
-                        } catch (_) {}
-                      }
-                      if (parsedDate == null) return false;
-                      return parsedDate.year == now.year && parsedDate.month == now.month && parsedDate.day == now.day;
-                    }).toList().reversed.toList();
+                final events = List<EventModel>.from(controller.events);
+                // Sort chronologically by scheduled date/time
+                events.sort((a, b) {
+                  final dtA = a.scheduledDateTime ?? DateTime.fromMillisecondsSinceEpoch(0);
+                  final dtB = b.scheduledDateTime ?? DateTime.fromMillisecondsSinceEpoch(0);
+                  return dtA.compareTo(dtB);
+                });
 
-                    return Expanded(
-                      child: ListView.builder(
-                        itemCount: todayEvents.length,
-                        itemBuilder: (context, index) {
-                        final EventModel event = todayEvents[index];
-
-                        return Dismissible(
-                          key: ValueKey(event.id),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            color: Colors.red,
-                            child: const Icon(Icons.delete, color: Colors.white),
+                if (events.isEmpty) {
+                  return Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.event_note, size: 56.sp, color: Colors.white24),
+                          AppSpacing.h16,
+                          Text(
+                            'No events found',
+                            style: GoogleFonts.inter(
+                              fontSize: 16.sp,
+                              color: Colors.white54,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                          confirmDismiss: (_) async {
-                            final completer = Completer<bool>();
-                            showRemoveEventDialog(
-                              context,
-                              onConfirm: () {
-                                controller.runWithLoaderAndTimer<bool>(
-                                  context: context,
-                                    task: () => controller.removeEventFromList(
-                                      event,
-                                      deleteType: 'single',
-                                    ),
-                                  ).then((success) {
-                                    if (success != true) {
-                                      debugPrint('❌ Failed to delete event');
-                                    }
-                                    completer.complete(success == true);
-                                  });
-                                },
-                              );
-                            return await completer.future.catchError(
-                            (_) => false,
+                          AppSpacing.h8,
+                          Text(
+                            'Add events from Calendar or sync with Google',
+                            style: GoogleFonts.inter(
+                              fontSize: 12.sp,
+                              color: Colors.white38,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return Expanded(
+                  child: ListView.builder(
+                    itemCount: events.length,
+                    itemBuilder: (context, index) {
+                      final EventModel event = events[index];
+
+                      return Dismissible(
+                        key: ValueKey(event.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          color: Colors.red,
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        confirmDismiss: (_) async {
+                          final completer = Completer<bool>();
+                          showRemoveEventDialog(
+                            context,
+                            onConfirm: () {
+                              controller.runWithLoaderAndTimer<bool>(
+                                context: context,
+                                task: () => controller.removeEventFromList(
+                                  event,
+                                  deleteType: 'single',
+                                ),
+                              ).then((success) {
+                                completer.complete(success == true);
+                              });
+                            },
                           );
+                          return await completer.future.catchError((_) => false);
                         },
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 20.0),
                           child: EventCard(
                             id: event.id,
                             title: event.title,
-                            // Directly pass description regardless of date condition
                             sub_title: event.description,
                             date: event.date,
-                            time: '${event.startTime}-${event.endTime}',
-                            location: event.category == 'Google Calendar'? '': event.location,
+                            time: event.startTime.isNotEmpty && event.endTime.isNotEmpty
+                                ? '${event.startTime}-${event.endTime}'
+                                : event.startTime,
+                            location: event.category == 'Google Calendar' ? '' : event.location,
                             isDarkMode: isDarkMode,
                             onEdit: () {
                               context.push('/edit_event', extra: event);
@@ -117,11 +140,7 @@ class AllEvents extends StatelessWidget {
                                       event,
                                       deleteType: 'single',
                                     ),
-                                  ).then((success) {
-                                  if (success != true) {
-                                    debugPrint('❌ Failed to delete event',);
-                                    }
-                                  });
+                                  );
                                 },
                               );
                             },
@@ -136,27 +155,9 @@ class AllEvents extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar:Consumer<AllEventsController>(
-        builder: (context, controller, _) => CustomBottomNavBar(),
+      bottomNavigationBar: Consumer<AllEventsController>(
+        builder: (context, controller, _) => const CustomBottomNavBar(),
       ),
     );
   }
 }
-
-  // SizedBox(height: 10.h),
-  //   Center(
-  //     child: CustomButton(
-  //       text: "Add New Event",
-  //       onPressed: () {
-  //         //context.push('/signup');
-  //         context.push('/add');
-  //       },
-  //       gradient: AppGradientColors.button_gradient,
-  //       textColor: AppColors.text_color,
-  //       fontFamily: 'outfit',
-  //       fontSize: 16.sp,
-  //       fontWeight: FontWeight.normal,
-  //       height: 51.h,
-  //       width: double.infinity,
-  //   ),
-  // ),

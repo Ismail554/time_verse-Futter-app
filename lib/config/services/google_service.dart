@@ -9,9 +9,6 @@ import 'package:time_verse/config/app_route/app_prefernce.dart';
 import 'package:time_verse/config/services/user_session.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
-
-
-
 class GoogleServices {
   static final GoogleServices _instance = GoogleServices._internal();
   factory GoogleServices() => _instance;
@@ -48,9 +45,28 @@ class GoogleServices {
         _accessToken = auth.accessToken;
         return _accessToken;
       }
+
+      final savedGoogleToken = await AppPrefs.getGoogleToken();
+      if (savedGoogleToken != null && savedGoogleToken.isNotEmpty) {
+        _accessToken = savedGoogleToken;
+        return _accessToken;
+      }
+
       return null;
     } catch (e) {
       debugPrint("❌ Error retrieving access token: $e");
+      return null;
+    }
+  }
+
+  /// Obtains a fresh Google ID token for re-authentication (e.g. required for account deletion per ADV-04)
+  Future<String?> getFreshIdToken() async {
+    try {
+      final user = _currentUser ?? await _googleSignIn.authenticate();
+      final auth = user.authentication;
+      return auth.idToken;
+    } catch (e) {
+      debugPrint("⚠️ Error acquiring fresh Google ID token: $e");
       return null;
     }
   }
@@ -62,36 +78,38 @@ class GoogleServices {
       final user = await _googleSignIn.authenticate();
       _currentUser = user;
 
-      if (_currentUser != null) {
-        final authentication = await _currentUser!.authentication;
-        final idToken = authentication.idToken;
+      final authentication = _currentUser!.authentication;
+      final idToken = authentication.idToken;
 
-        final auth = await _currentUser!.authorizationClient.authorizeScopes(scopes);
-        _accessToken = auth.accessToken;
+      final auth = await _currentUser!.authorizationClient.authorizeScopes(scopes);
+      _accessToken = auth.accessToken;
 
-        final serverAuth = await _currentUser!.authorizationClient.authorizeServer(scopes);
-        final String? serverAuthCode = serverAuth?.serverAuthCode;
+      final serverAuth = await _currentUser!.authorizationClient.authorizeServer(scopes);
+      final String? serverAuthCode = serverAuth?.serverAuthCode;
 
-        UserSession().username = _currentUser!.displayName;
-        UserSession().profileImageUrl = _currentUser!.photoUrl;
+      UserSession().username = _currentUser!.displayName;
+      UserSession().profileImageUrl = _currentUser!.photoUrl;
 
-        await AppPrefs.saveGoogleUser(
-          _currentUser!.displayName ?? '',
-          _currentUser!.email,
-          photoUrl: _currentUser!.photoUrl,
+      await AppPrefs.saveGoogleUser(
+        _currentUser!.displayName ?? '',
+        _currentUser!.email,
+        photoUrl: _currentUser!.photoUrl,
+      );
+
+      if (idToken != null) {
+        final apiSuccess = await sendTokensToApi(
+          idToken: idToken,
+          serverAuthCode: serverAuthCode,
         );
-
-        if (idToken != null && serverAuthCode != null) {
-          await sendTokensToApi(
-            idToken: idToken,
-            serverAuthCode: serverAuthCode,
-          );
+        if (!apiSuccess) {
+          debugPrint("⚠️ Backend token exchange did not succeed.");
+          await signOut();
+          return false;
         }
-
-        debugPrint("✅ Google Sign-In Success for: ${_currentUser!.displayName}");
-        return true;
       }
-      return false;
+
+      debugPrint("✅ Google Sign-In Success for: ${_currentUser!.displayName}");
+      return true;
     } catch (e) {
       final errorStr = e.toString().toLowerCase();
       if (errorStr.contains('cancelled by user') || errorStr.contains('16:')) {
@@ -116,7 +134,7 @@ class GoogleServices {
     }
   }
 
-  Future<void> sendTokensToApi({required String idToken, required String serverAuthCode}) async {
+  Future<bool> sendTokensToApi({required String idToken, String? serverAuthCode}) async {
     try {
       final dio = createDio();
       final baseurl = dotenv.env['BASE_URL'];
@@ -126,7 +144,8 @@ class GoogleServices {
         url,
         data: {
           'id_token': idToken,
-          'auth_code': serverAuthCode,
+          if (serverAuthCode != null && serverAuthCode.isNotEmpty)
+            'auth_code': serverAuthCode,
         },
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
@@ -134,23 +153,45 @@ class GoogleServices {
       if (response.statusCode == 200) {
         final data = response.data;
 
-        final backendAccessToken = data['access_token'];
+        // Dual-key compatibility per Backend v2.1.0 (Section 6.2 & 8.1.3)
+        final backendAccessToken = data['access'] ?? data['access_token'];
+        final backendRefreshToken = data['refresh'] ?? data['refresh_token'];
+
         if (backendAccessToken != null) {
-          await AuthService().saveToken(backendAccessToken);
+          await AuthService().saveToken(
+            backendAccessToken.toString(),
+            backendRefreshToken?.toString(),
+          );
           await AppPrefs.setLoggedIn(true);
           await AppPrefs.setGoogleLogin(true);
-          await AppPrefs.saveGoogleToken(backendAccessToken);
 
-          UserSession().username = data['name'] ?? UserSession().username;
-          UserSession().profileImageUrl = data['picture'] ?? UserSession().profileImageUrl;
+          // Save Google OAuth token for client calendar read requests
+          if (_accessToken != null && _accessToken!.isNotEmpty) {
+            await AppPrefs.saveGoogleToken(_accessToken!);
+          }
+
+          final userData = data['user'];
+          final name = userData?['name'] ?? data['name'] ?? _currentUser?.displayName;
+          final picture = userData?['profile_picture'] ?? data['picture'] ?? _currentUser?.photoUrl;
+          final userId = userData?['id']?.toString();
+
+          if (userId != null) UserSession().userId = userId;
+          if (name != null) UserSession().username = name.toString();
+          if (picture != null) UserSession().profileImageUrl = picture.toString();
+
+          debugPrint('✅ Google login successful and tokens stored.');
+          return true;
         }
-
-        debugPrint('✅ Google login successful $response');
       } else {
-        debugPrint('⚠ Unexpected status code: ${response.statusCode}');
+        debugPrint('⚠️ Unexpected status code: ${response.statusCode}');
       }
+      return false;
     } on DioException catch (e) {
       debugPrint('❌ Error sending tokens: ${e.response?.data ?? e.message}');
+      return false;
+    } catch (e) {
+      debugPrint('❌ Exception in sendTokensToApi: $e');
+      return false;
     }
   }
 
@@ -159,23 +200,23 @@ class GoogleServices {
 
     final rule = repeat.toLowerCase().trim();
 
-    // if (rule == 'every 1 day' || rule == '1 day') return 'RRULE:FREQ=DAILY';
-    // if (rule == 'every 1 week' || rule == '1 week') return 'RRULE:FREQ=WEEKLY';
-    // if (rule == 'every 1 month' || rule == '1 month') return 'RRULE:FREQ=MONTHLY';
-    // if (rule == 'every 1 year' || rule == '1 year') return 'RRULE:FREQ=YEARLY';
-     if (rule == 'every 1 day' || rule == '1 day') return 'RRULE:FREQ=DAILY;COUNT=7';     // Stops after 7 days
-  if (rule == 'every 1 week' || rule == '1 week') return 'RRULE:FREQ=WEEKLY;COUNT=4';   // Stops after 4 weeks
-  if (rule == 'every 1 month' || rule == '1 month') return 'RRULE:FREQ=MONTHLY;COUNT=12'; // Stops after 12 months
-  if (rule == 'every 1 year' || rule == '1 year') return 'RRULE:FREQ=YEARLY;COUNT=5';   // Stops after 5 years
+    if (rule == 'every 1 day' || rule == '1 day') return 'RRULE:FREQ=DAILY;COUNT=7';
+    if (rule == 'every 1 week' || rule == '1 week') return 'RRULE:FREQ=WEEKLY;COUNT=4';
+    if (rule == 'every 1 month' || rule == '1 month') return 'RRULE:FREQ=MONTHLY;COUNT=12';
+    if (rule == 'every 1 year' || rule == '1 year') return 'RRULE:FREQ=YEARLY;COUNT=5';
 
     if (rule == 'custom' && customRepeat != null) {
       final unit = customRepeat['repeat_unit']?.toString().toUpperCase() ?? 'WEEKLY';
       final interval = customRepeat['repeat_every'] ?? 1;
       String freq = 'WEEKLY';
 
-      if (unit.contains('DAY')) freq = 'DAILY';
-      else if (unit.contains('MONTH')) freq = 'MONTHLY';
-      else if (unit.contains('YEAR')) freq = 'YEARLY';
+      if (unit.contains('DAY')) {
+        freq = 'DAILY';
+      } else if (unit.contains('MONTH')) {
+        freq = 'MONTHLY';
+      } else if (unit.contains('YEAR')) {
+        freq = 'YEARLY';
+      }
 
       String rrule = 'RRULE:FREQ=$freq;INTERVAL=$interval';
 
@@ -183,7 +224,8 @@ class GoogleServices {
       if (days != null && days.isNotEmpty) {
         final dayMap = {
           'S': 'SU', 'M': 'MO', 'T': 'TU', 'W': 'WE', 'TH': 'TH', 'F': 'FR', 'SAT': 'SA',
-          '0': 'SU', '1': 'MO', '2': 'TU', '3': 'WE', '4': 'TH', '5': 'FR', '6': 'SA', '7': 'SU'
+          '0': 'SU', '1': 'MO', '2': 'TU', '3': 'WE', '4': 'TH', '5': 'FR', '6': 'SA', '7': 'SU',
+          'SU': 'SU', 'MO': 'MO', 'TU': 'TU', 'WE': 'WE', 'FR': 'FR', 'SA': 'SA',
         };
         final mappedDays = days.map((d) => dayMap[d.toString().trim().toUpperCase()] ?? 'MO').join(',');
         rrule += ';BYDAY=$mappedDays';
@@ -193,7 +235,6 @@ class GoogleServices {
         final rawEndDateStr = customRepeat['end_date'].toString();
         final parsed = DateTime.tryParse(rawEndDateStr);
         if (parsed != null) {
-          // Format UNTIL strictly at end-of-day UTC (23:59:59Z) to cover local time boundaries
           final endOfDayUtc = DateTime.utc(parsed.year, parsed.month, parsed.day, 23, 59, 59);
           final formattedEnd = DateFormat("yyyyMMdd'T'HHmmss'Z'").format(endOfDayUtc);
           rrule += ';UNTIL=$formattedEnd';
@@ -208,7 +249,7 @@ class GoogleServices {
     return null;
   }
 
-         Future<void> createGoogleCalendarEvent({
+  Future<void> createGoogleCalendarEvent({
     required String accessToken,
     required String title,
     required String date,
@@ -223,7 +264,6 @@ class GoogleServices {
     final cleanStart = startTime.split(':').length == 2 ? "$startTime:00" : startTime;
     var cleanEnd = endTime.split(':').length == 2 ? "$endTime:00" : endTime;
 
-    // 💡 1. Fetch dynamic IANA timezone directly from the device
     String userTimeZone = 'UTC';
     try {
       final tz = await FlutterTimezone.getLocalTimezone();
@@ -245,8 +285,6 @@ class GoogleServices {
     final startParts = cleanStart.split(':').map(int.parse).toList();
     final endParts = cleanEnd.split(':').map(int.parse).toList();
 
-    // 💡 2. FIXED: Use DateTime.utc to lock coordinates completely in place
-    // This stops the system from adding or subtracting timezone hours automatically.
     final startDt = DateTime.utc(year, month, day, startParts[0], startParts[1]);
     var endDt = DateTime.utc(year, month, day, endParts[0], endParts[1]);
 
@@ -254,7 +292,6 @@ class GoogleServices {
       endDt = startDt.add(const Duration(minutes: 30));
     }
 
-    // 💡 3. Format with a trailing 'Z' to explicitly indicate a locked UTC string payload
     final String startIso = "${DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(startDt)}Z";
     final String endIso = "${DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(endDt)}Z";
 
@@ -265,8 +302,8 @@ class GoogleServices {
       "description": description ?? "",
       "location": location ?? "",
       "start": {
-        "dateTime": startIso,       // e.g. "2026-10-28T21:00:00Z"
-        "timeZone": userTimeZone,   // Tells Google exactly how to translate it to your local grid
+        "dateTime": startIso,
+        "timeZone": userTimeZone,
       },
       "end": {
         "dateTime": endIso,
@@ -284,7 +321,7 @@ class GoogleServices {
     try {
       final dio = createDio();
       final response = await dio.post(
-        "https://googleapis.com",
+        "https://www.googleapis.com/calendar/v3/calendars/primary/events",
         data: body,
         options: Options(
           headers: {
@@ -302,9 +339,6 @@ class GoogleServices {
     }
   }
 
-
-
-  
   Future<List<Map<String, dynamic>>> getGoogleCalendarEvents({
     required String accessToken,
     DateTime? timeMin,

@@ -19,7 +19,13 @@ import 'package:time_verse/features/all_events/model/event_model.dart';
 
 class EventDetails extends StatelessWidget {
   final int eventId;
-  const EventDetails({super.key, required this.eventId});
+  final EventModel? initialEvent;
+
+  const EventDetails({
+    super.key,
+    required this.eventId,
+    this.initialEvent,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +36,19 @@ class EventDetails extends StatelessWidget {
       extendBody: true,
       body: RefreshIndicator(
         onRefresh: () async {
-          await eventController.fetchEventDetailsById(eventId);
+          await eventController.fetchEventDetailsById(
+            eventId,
+            forceRefresh: true,
+            fallbackEvent: initialEvent,
+          );
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: FutureBuilder<EventModel?>(
-            future: eventController.fetchEventDetailsById(eventId),
+            future: eventController.fetchEventDetailsById(
+              eventId,
+              fallbackEvent: initialEvent,
+            ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return _buildShimmerLoading(context, isDarkMode);
@@ -116,7 +129,7 @@ class EventDetails extends StatelessWidget {
                               ),
                               AppSpacing.h6,
                               Text(
-                                'Today • ${eventDetail.startTime.isEmpty ? "2:00 PM" : eventDetail.startTime}',
+                                '${eventDetail.date.isNotEmpty ? eventDetail.date : "Today"} • ${eventDetail.startTime.isEmpty ? "2:00 PM" : eventDetail.startTime}',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.manrope(
                                   fontSize: 14.sp,

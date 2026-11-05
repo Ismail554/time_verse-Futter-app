@@ -1,11 +1,14 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:time_verse/config/app_route/app_prefernce.dart';
+import 'package:time_verse/config/services/google_service.dart';
 import 'package:time_verse/core/components/custom_button.dart';
+import 'package:time_verse/core/components/custom_dialogue.dart';
 import 'package:time_verse/core/components/custom_header.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/asset_manager.dart';
@@ -33,13 +36,13 @@ class DeleteAccount extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 28.h),
               decoration: BoxDecoration(
                 color: isDarkMode
-                ? const Color(0xFF0B1528)
-                : Colors.white, // Dark background canvas match
+                    ? const Color(0xFF0B1528)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(
                   color: isDarkMode
-                    ? const Color(0xFFFFB703).withOpacity(0.2) // Subtle gold outline accent frame ring
-                    : const Color(0xFFE5E7EB),
+                      ? const Color(0xFFFFB703).withOpacity(0.2)
+                      : const Color(0xFFE5E7EB),
                   width: 1.2,
                 ),
                 boxShadow: [
@@ -54,30 +57,25 @@ class DeleteAccount extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 1. Vector Asset Layer
                   SvgPicture.asset(
                     isDarkMode
-                    ? IconAssets.deleteLogo
-                    : IconAssets.deleteLogoLight,
+                        ? IconAssets.deleteLogo
+                        : IconAssets.deleteLogoLight,
                     width: 90.w,
                     height: 90.h,
                   ),
                   AppSpacing.h24,
-
-                  // 2. Section Component Headline
                   Text(
                     'Delete Account',
                     style: GoogleFonts.outfit(
                       fontSize: 24.sp,
-                      fontWeight:FontWeight.w700, 
+                      fontWeight: FontWeight.w700, 
                       color: isDarkMode
-                      ? Colors.white
-                      : const Color(0xFF1F2937),
+                          ? Colors.white
+                          : const Color(0xFF1F2937),
                     ),
                   ),
                   AppSpacing.h12,
-
-                  // 3. Informational Message Block
                   Text(
                     'Are you sure you want to delete your account? This action cannot be undone.',
                     textAlign: TextAlign.center,
@@ -86,18 +84,16 @@ class DeleteAccount extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                       height: 1.4,
                       color: isDarkMode
-                        ? const Color(0xFF9CA3AF)
-                        : const Color(0xFF4B5563),
+                          ? const Color(0xFF9CA3AF)
+                          : const Color(0xFF4B5563),
                     ),
                   ),
                   AppSpacing.h24,
-
-                  // 4. Critical Alert Frame Element Block
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.all(14.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFB703).withOpacity(0.06,), 
+                      color: const Color(0xFFFFB703).withOpacity(0.06), 
                       borderRadius: BorderRadius.circular(10.r),
                       border: Border.all(
                         color: const Color(0xFFFFB703).withOpacity(0.25),
@@ -122,12 +118,12 @@ class DeleteAccount extends StatelessWidget {
                         AppSpacing.w10,
                         Expanded(
                           child: Text(
-                            'Warning: Deleting your account will permanently remove all your data, including your children\'s profiles, events, group memberships, and chat history. This action cannot be undone.',
+                            'Warning: Deleting your account will permanently remove all your data, including your events, quotes, and calendar synchronization. This action cannot be undone.',
                             style: GoogleFonts.outfit(
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w400,
                               height: 1.4,
-                              color: const Color(0xFFFFB703,), // Matching matching gold-orange warning output color properties
+                              color: const Color(0xFFFFB703),
                             ),
                           ),
                         ),
@@ -140,14 +136,39 @@ class DeleteAccount extends StatelessWidget {
                       return CustomButton(
                         text: "Delete",
                         onPressed: () async {
-                          // Prompt user verification upfront
-                          final password = await showPasswordDialog(context);
-                          if (password == null || password.isEmpty) return;
-                          if (context.mounted) {
-                            await controller.executeAccountDeletion(
-                              context: context,
-                              password: password,
+                          final isGoogleUser = await AppPrefs.isGoogleLogin();
+
+                          if (isGoogleUser) {
+                            final confirmed = await showConfirmationDialog(
+                              context,
+                              'Re-authentication with Google is required to confirm permanent account deletion.',
+                              title: 'Re-authenticate with Google',
+                              confirmText: 'Continue',
                             );
+                            if (confirmed != true) return;
+
+                            final freshIdToken = await GoogleServices().getFreshIdToken();
+                            if (freshIdToken == null || freshIdToken.isEmpty) {
+                              if (context.mounted) {
+                                showErrorSnackBar(context, 'Google re-authentication canceled.');
+                              }
+                              return;
+                            }
+                            if (context.mounted) {
+                              await controller.executeAccountDeletion(
+                                context: context,
+                                idToken: freshIdToken,
+                              );
+                            }
+                          } else {
+                            final password = await showPasswordDialog(context);
+                            if (password == null || password.isEmpty) return;
+                            if (context.mounted) {
+                              await controller.executeAccountDeletion(
+                                context: context,
+                                password: password,
+                              );
+                            }
                           }
                         },
                         solidColor: const Color(0xFFFF0000).withOpacity(0.2),
@@ -167,8 +188,8 @@ class DeleteAccount extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     borderGradient: AppGradientColors.button_gradient,
                     solidColor: isDarkMode
-                    ? const Color(0xFF0B1528)
-                    : Colors.white,
+                        ? const Color(0xFF0B1528)
+                        : Colors.white,
                     textColor: const Color(0xFFFFB703),
                     fontFamily: 'outfit',
                     fontSize: 16.sp,
@@ -196,7 +217,7 @@ class DeleteAccount extends StatelessWidget {
           content: TextField(
             controller: controller,
             obscureText: true,
-            decoration: const InputDecoration(hintText: "Enter your password"),
+            decoration: const InputDecoration(hintText: "Enter your password to confirm"),
           ),
           actions: [
             TextButton(

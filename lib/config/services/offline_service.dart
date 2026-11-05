@@ -11,6 +11,7 @@ class OfflineSyncService {
   OfflineSyncService._internal();
 
   static const String _queueKey = 'pending_event_queue';
+  bool _isProcessing = false;
 
   /// Initialize listener for internet status changes
   void initListener(AddEventRepository repository) {
@@ -32,30 +33,37 @@ class OfflineSyncService {
     debugPrint('💾 Event queued locally for sync. Items in queue: ${queue.length}');
   }
 
-  /// Send all queued events to the backend
+  /// Send all queued events to the backend with concurrency lock
   Future<void> processQueue(AddEventRepository repository) async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String> queue = prefs.getStringList(_queueKey) ?? [];
+    if (_isProcessing) return;
+    _isProcessing = true;
 
-    if (queue.isEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String> queue = prefs.getStringList(_queueKey) ?? [];
 
-    List<String> remainingItems = List.from(queue);
+      if (queue.isEmpty) return;
 
-    for (String itemStr in queue) {
-      try {
-        final body = jsonDecode(itemStr) as Map<String, dynamic>;
-        final result = await repository.createTaskRaw(body);
+      List<String> remainingItems = List.from(queue);
 
-        if (result != null) {
-          remainingItems.remove(itemStr);
-          debugPrint('✅ Synced queued event: ${body['title']}');
+      for (String itemStr in queue) {
+        try {
+          final body = jsonDecode(itemStr) as Map<String, dynamic>;
+          final result = await repository.createTaskRaw(body);
+
+          if (result != null) {
+            remainingItems.remove(itemStr);
+            debugPrint('✅ Synced queued event: ${body['title']}');
+          }
+        } catch (e) {
+          debugPrint('⚠️ Sync attempt failed for item: $e');
+          break;
         }
-      } catch (e) {
-        debugPrint('⚠️ Sync attempt failed for item: $e');
-        break;
       }
-    }
 
-    await prefs.setStringList(_queueKey, remainingItems);
+      await prefs.setStringList(_queueKey, remainingItems);
+    } finally {
+      _isProcessing = false;
+    }
   }
 }

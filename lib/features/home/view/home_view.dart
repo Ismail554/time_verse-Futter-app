@@ -20,24 +20,50 @@ import 'package:time_verse/features/home/widget/feebpback_popup.dart';
 import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
 
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
   final GlobalKey _shareKey = GlobalKey();
-  HomeView({super.key});
+  late final ScrollController _dateScrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final double itemWidth = 66.w;
+    final int todayIndex = now.day - 1;
+    final double initialOffset = (todayIndex - 2).clamp(0, daysInMonth) * itemWidth;
+    _dateScrollController = ScrollController(initialScrollOffset: initialOffset);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final homeController = context.read<HomeController>();
+      final profileController = context.read<ProfileController>();
+      if (!homeController.isInitialized) {
+        final currentRouteUri = GoRouterState.of(context).uri.toString();
+        homeController.initOnce(profileController, context);
+        homeController.updateIndexFromRoute(currentRouteUri);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _dateScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final homeController = context.read<HomeController>();
     final profileController = context.read<ProfileController>();
-
-    if (!homeController.isInitialized) {
-      final currentRouteUri = GoRouterState.of(context).uri.toString();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted) return;
-        homeController.initOnce(profileController, context);
-        homeController.updateIndexFromRoute(currentRouteUri);
-      });
-    }
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -226,14 +252,9 @@ class HomeView extends StatelessWidget {
                         builder: (context, controller, _) {
                           final now = DateTime.now();
                           final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-                          final double itemWidth = 66.w;
-                          final int todayIndex = now.day - 1;
-                          final double initialOffset = (todayIndex - 2).clamp(0, daysInMonth) * itemWidth;
-                          final ScrollController statelessScrollController =
-                              ScrollController(initialScrollOffset: initialOffset);
 
                           return ListView.builder(
-                            controller: statelessScrollController,
+                            controller: _dateScrollController,
                             scrollDirection: Axis.horizontal,
                             itemCount: daysInMonth,
                             padding: EdgeInsets.symmetric(horizontal: 12.w),

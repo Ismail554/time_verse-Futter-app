@@ -11,7 +11,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
-
 class SavedQouteController extends ChangeNotifier {
   final List<Map<String, dynamic>> savedQuotes = [];
   final Set<int> selectedQuotes = {};
@@ -29,7 +28,8 @@ class SavedQouteController extends ChangeNotifier {
 
   void updateSearchQuery(String query) {
     _searchQuery = query.toLowerCase();
-    notifyListeners(); 
+    selectedQuotes.clear(); // Reset selection when filtering changes
+    notifyListeners();
   }
 
   List<Map<String, dynamic>> get filteredQuotes {
@@ -52,7 +52,8 @@ class SavedQouteController extends ChangeNotifier {
 
   void selectAllQuotes() {
     selectedQuotes.clear();
-    for (int i = 0; i < savedQuotes.length; i++) {
+    final list = _searchQuery.isEmpty ? savedQuotes : filteredQuotes;
+    for (int i = 0; i < list.length; i++) {
       selectedQuotes.add(i);
     }
     notifyListeners();
@@ -65,7 +66,12 @@ class SavedQouteController extends ChangeNotifier {
 
   void shareSelectedQuotes(BuildContext context) {
     if (selectedQuotes.isEmpty) return;
-    final quotesToShare = selectedQuotes.map((i) => savedQuotes[i]['description']).where((q) => q != null && q.toString().trim().isNotEmpty).join('\n\n');
+    final list = _searchQuery.isEmpty ? savedQuotes : filteredQuotes;
+    final quotesToShare = selectedQuotes
+        .where((i) => i >= 0 && i < list.length)
+        .map((i) => list[i]['description'])
+        .where((q) => q != null && q.toString().trim().isNotEmpty)
+        .join('\n\n');
     if (quotesToShare.trim().isEmpty) return;
     Share.share(quotesToShare);
   }
@@ -116,7 +122,7 @@ class SavedQouteController extends ChangeNotifier {
       final dio = createDio();
       final baseUrl = dotenv.env['BASE_URL'] ?? '';
       final url = '${baseUrl}api/v1/event/$eventId/favorite/';
-      
+
       final response = await dio.post(
         url,
         options: Options(
@@ -140,7 +146,6 @@ class SavedQouteController extends ChangeNotifier {
     }
   }
 
-
   Future<File?> _captureCardAsImage(GlobalKey boundaryKey) async {
     try {
       final RenderRepaintBoundary? boundary = boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
@@ -148,60 +153,77 @@ class SavedQouteController extends ChangeNotifier {
 
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final pngBytes = byteData!.buffer.asUint8List();
 
-      if (byteData != null) {
-        final buffer = byteData.buffer.asUint8List();
-        final tempDir = await getTemporaryDirectory();
-        final file = await File('${tempDir.path}/quote_${DateTime.now().millisecondsSinceEpoch}.png').create();
-        await file.writeAsBytes(buffer);
-        return file;
-      }
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/quote_${DateTime.now().millisecondsSinceEpoch}.png').create();
+      await file.writeAsBytes(pngBytes);
+      return file;
     } catch (e) {
       debugPrint('⚠️ Error capturing card image: $e');
+      return null;
     }
-    return null;
   }
-
-  Future<void> shareQuotesAsImage(dynamic input) async {
-  if (input is GlobalKey) {
-    final file = await _captureCardAsImage(input);
-    if (file != null) {
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'Check out this quote from my Wisdom Journal!',
-      );
-    }
-  } else if (input is String) {
-    // Shares raw text directly (Individual card Share)
-    await Share.share(input);
-  }
-}
 
   Future<bool> saveQuoteToGallery(GlobalKey boundaryKey) async {
-    final file = await _captureCardAsImage(boundaryKey);
-    if (file != null) {
-      try {
-        await Gal.putImage(file.path);
-        return true;
-      } catch (e) {
-        debugPrint('⚠️ Error saving image to gallery: $e');
+    try {
+      bool hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        hasAccess = await Gal.requestAccess();
+        if (!hasAccess) return false;
+      }
+
+      final file = await _captureCardAsImage(boundaryKey);
+      if (file == null) return false;
+
+      final bytes = await file.readAsBytes();
+      await Gal.putImageBytes(bytes, album: 'MyQuotes');
+      return true;
+    } catch (e) {
+      debugPrint('⚠️ Error saving to gallery: $e');
+      return false;
+    }
+  }
+
+  Future<void> shareQuotesAsImage(dynamic quoteText, {GlobalKey? cardKey}) async {
+    if (cardKey != null) {
+      final file = await _captureCardAsImage(cardKey);
+      if (file != null) {
+        await Share.shareXFiles([XFile(file.path)], text: quoteText?.toString() ?? '');
+        return;
       }
     }
-    return false;
+    if (quoteText != null && quoteText.toString().trim().isNotEmpty) {
+      Share.share(quoteText.toString());
+    }
   }
 
   Future<void> shareAllQuotesAsImages(List<GlobalKey> cardKeys) async {
-    List<XFile> imageFiles = [];
-
-    for (var key in cardKeys) {
-      final file = await _captureCardAsImage(key);
-      if (file != null) {
-        imageFiles.add(XFile(file.path));
-      }
+    final list = _searchQuery.isEmpty ? savedQuotes : filteredQuotes;
+    final text = list
+        .map((q) => '"${q['description']}" - ${q['author']}')
+        .where((s) => s.trim().isNotEmpty)
+        .join('\n\n');
+    if (text.isNotEmpty) {
+      Share.share(text);
     }
+  }
 
-    if (imageFiles.isNotEmpty) {
-      await Share.shareXFiles(imageFiles, text: 'Check out my saved quotes!');
+  Future<void> shareSingleQuoteImage(int index, GlobalKey boundaryKey) async {
+    final list = _searchQuery.isEmpty ? savedQuotes : filteredQuotes;
+    if (index < 0 || index >= list.length) return;
+
+    final quote = list[index];
+    final file = await _captureCardAsImage(boundaryKey);
+    if (file != null) {
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '✨ "${quote['description']}" - ${quote['author']}',
+      );
     }
+  }
+
+  Future<void> saveSingleQuoteToGallery(int index, GlobalKey boundaryKey) async {
+    await saveQuoteToGallery(boundaryKey);
   }
 }

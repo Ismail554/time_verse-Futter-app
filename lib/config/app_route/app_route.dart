@@ -1,7 +1,7 @@
 import 'package:alarm/model/alarm_settings.dart';
 import 'package:go_router/go_router.dart';
+import 'package:time_verse/config/app_route/page_transitions.dart';
 import 'package:time_verse/core/components/alarm.dart';
-import 'package:time_verse/core/theme/theme_background_wrapper.dart';
 import 'package:time_verse/features/all_events/model/event_model.dart';
 import 'package:time_verse/features/all_events/view/all_events.dart';
 import 'package:time_verse/features/all_events/view/event_details.dart';
@@ -32,152 +32,206 @@ final GoRouter appRouter = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: SplashScreen(), 
+      pageBuilder: (context, state) => buildFadeTransitionPage(
+        context: context,
+        state: state,
+        child: const SplashScreen(),
       ),
     ),
     GoRoute(
       path: '/landing',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: LandingScreen(), 
+      pageBuilder: (context, state) => buildFadeTransitionPage(
+        context: context,
+        state: state,
+        child: const LandingScreen(),
       ),
     ),
     GoRoute(
       path: '/signup',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: Signup(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: Signup(),
       ),
     ),
     GoRoute(
       path: '/login',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: LoginPage(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const LoginPage(),
       ),
     ),
     GoRoute(
       path: '/forgot_pass',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: ForgotPassword(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const ForgotPassword(),
       ),
     ),
     GoRoute(
       path: '/otp',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: OtpView(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const OtpView(),
       ),
     ),
     GoRoute(
       path: '/reset_password',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: ResetPassword(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const ResetPassword(),
       ),
     ),
     GoRoute(
       path: '/settings',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: Settings(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const Settings(),
       ),
     ),
     GoRoute(
       path: '/profile',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: Profile(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const Profile(),
       ),
     ),
     GoRoute(
       path: '/change_password',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: ChangePassword(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const ChangePassword(),
       ),
     ),
     GoRoute(
       path: '/privacy_policy',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: Privacy(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const Privacy(),
       ),
     ),
     GoRoute(
       path: '/terms_and_condition',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: TermsAndCondition(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const TermsAndCondition(),
       ),
     ),
     GoRoute(
       path: '/notification',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: NotificationsScreen(),
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const NotificationsScreen(),
       ),
     ),
     GoRoute(
       path: '/delete_account',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: DeleteAccount(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const DeleteAccount(),
       ),
     ),
     GoRoute(
       path: '/subscription',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: Subscription(controller: SubscriptionController(),), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: Subscription(controller: SubscriptionController()),
       ),
     ),
     GoRoute(
       path: '/saved',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: SavedQoutation(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: SavedQoutation(),
       ),
     ),
     GoRoute(
       path: '/all_events',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: AllEvents(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const AllEvents(),
       ),
     ),
-    // GoRoute(
-    //   path: '/event_details',
-    //   builder: (context, state) => ThemedBackgroundWrapper(
-    //     child: EventDetails(), 
-    //   ),
-    // ),
     GoRoute(
       path: '/event_details',
-      builder: (context, state) {
-        final int eventId = state.extra as int;
-        return ThemedBackgroundWrapper(child: EventDetails(eventId: eventId));
+      pageBuilder: (context, state) {
+        int eventId = 0;
+        EventModel? event;
+        if (state.extra is int) {
+          eventId = state.extra as int;
+        } else if (state.extra is EventModel) {
+          event = state.extra as EventModel;
+          eventId = event.id;
+        } else if (state.extra is String) {
+          eventId = int.tryParse(state.extra as String) ?? 0;
+        }
+        return buildAppTransitionPage(
+          context: context,
+          state: state,
+          child: EventDetails(eventId: eventId, initialEvent: event),
+        );
       },
     ),
     GoRoute(
       path: '/calender',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: CalenderView(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const CalenderView(),
       ),
     ),
     GoRoute(
       path: '/home',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: HomeView(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: HomeView(),
       ),
     ),
     GoRoute(
       path: '/add',
-      builder: (context, state) => ThemedBackgroundWrapper(
-        child: AddEventPage(), 
+      pageBuilder: (context, state) => buildAppTransitionPage(
+        context: context,
+        state: state,
+        child: const AddEventPage(),
       ),
     ),
     GoRoute(
       path: '/edit_event',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final extra = state.extra;
-        final String eventId = extra is EventModel ? extra.id.toString(): (extra?.toString() ?? '');
+        final String eventId = extra is EventModel
+            ? extra.id.toString()
+            : (extra?.toString() ?? '');
 
-        return ThemedBackgroundWrapper(child: EditEventPage(eventId: eventId));
+        return buildAppTransitionPage(
+          context: context,
+          state: state,
+          child: EditEventPage(eventId: eventId),
+        );
       },
     ),
     GoRoute(
       path: '/alarm',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final alarm = state.extra as AlarmSettings;
-        // ✅ Wrapped smoothly without touching anything else
-        return ThemedBackgroundWrapper(
+        return buildFadeTransitionPage(
+          context: context,
+          state: state,
           child: ExampleAlarmRingScreen(alarmSettings: alarm),
         );
       },

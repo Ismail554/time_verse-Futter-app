@@ -18,10 +18,10 @@ import 'package:time_verse/config/services/alerm_service.dart';
 import 'package:time_verse/config/services/google_service.dart';
 import 'package:time_verse/config/services/user_session.dart';
 import 'package:time_verse/features/all_events/model/event_model.dart';
+import 'package:time_verse/features/calender/repository/event_detail_utils.dart';
 import 'package:time_verse/features/home/model/ai_refelction_model.dart';
 import 'package:time_verse/features/home/model/quotedata_model.dart';
 import 'dart:async';
-import 'package:time_verse/features/home/model/review_model.dart';
 import 'package:time_verse/features/home/repository/event_repository.dart';
 import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
 
@@ -74,9 +74,9 @@ class HomeController extends ChangeNotifier {
     inspirationalQuotes = [..._defaultQuote];
   }
 
-  void setRandomBackgroundImage() {
+  void setRandomBackgroundImage({bool notify = true}) {
     currentBgIndex = Random().nextInt(totalBgImages) + 1;
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   void toggleFavorite() {
@@ -94,6 +94,18 @@ class HomeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reset all user-specific home state on logout
+  void resetSession() {
+    _isInitialized = false;
+    todaysEvents.clear();
+    currentReflection = null;
+    inspirationalQuotes = [..._defaultQuote];
+    _currentQuoteIndex = 0;
+    _selectedRating = 0;
+    _feedbackController.clear();
+    notifyListeners();
+  }
+
   void clearFeedback() {
     _selectedRating = 0;
     _feedbackController.clear();
@@ -108,7 +120,7 @@ class HomeController extends ChangeNotifier {
     if (success) clearFeedback();
   }
 
-  /// 🚀 FAST INITIALIZATION: Loads all home data concurrently using Future.wait
+  /// Loads all home data concurrently using Future.wait
   void initOnce(ProfileController profileController, [BuildContext? context]) {
     if (_isInitialized) return;
     _isInitialized = true;
@@ -123,9 +135,8 @@ class HomeController extends ChangeNotifier {
       final now = DateTime.now();
       for (final event in todaysEvents) {
         if (event.alarmTime.isNotEmpty) {
-          final cleanIso = event.alarmTime.trim().replaceAll(RegExp(r'Z$'), '');
-          final parsedAlarm = DateTime.tryParse(cleanIso);
-          if (parsedAlarm != null && parsedAlarm.isAfter(now) && context != null) {
+          final parsedAlarm = EventDateTimeUtils.parseAlarmIsoToLocal(event.alarmTime);
+          if (parsedAlarm != null && parsedAlarm.isAfter(now)) {
             await AlarmHelper.scheduleEventAlarm(context, event);
           }
         }
@@ -139,9 +150,9 @@ class HomeController extends ChangeNotifier {
     });
   }
 
-  /// 🚀 PARALLEL DATA LOADER: Fetches Backend Events, Google Events, Quotes, & AI Reflections simultaneously
+  /// Fetches Backend Events, Google Events, Quotes, & AI Reflections simultaneously
   Future<void> loadHomeScreenData(ProfileController profileController, {DateTime? date}) async {
-    final currentUserId = profileController.currentUser?.id?.toString() ?? UserSession().userId;
+    final currentUserId = profileController.currentUser?.id.toString() ?? UserSession().userId;
     if (currentUserId == null) return;
 
     final targetDate = date ?? selectedDate;
@@ -159,10 +170,32 @@ class HomeController extends ChangeNotifier {
     final reflection = results[2] as EventReflectionResponse?;
     final quotes = results[3] as List<QuoteData>?;
 
+    String normalizeTime(String time) {
+      if (time.isEmpty) return '';
+      final parts = time.split(':');
+      if (parts.length >= 2) {
+        return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
+      }
+      return time;
+    }
+
+    // Deduplicate Google events that match backend events by googleCalendarEventId or (title, start time)
+    final uniqueGoogleEvents = googleEvents.where((gEvent) {
+      final isDup = backendEvents.any((bEvent) {
+        final sameGoogleId = bEvent.googleCalendarEventId != null &&
+            bEvent.googleCalendarEventId!.isNotEmpty &&
+            bEvent.googleCalendarEventId == gEvent.location;
+        final sameTitle = bEvent.title.trim().toLowerCase() == gEvent.title.trim().toLowerCase();
+        final sameStart = normalizeTime(bEvent.startTime) == normalizeTime(gEvent.startTime);
+        return sameGoogleId || (sameTitle && sameStart);
+      });
+      return !isDup;
+    }).toList();
+
     todaysEvents
       ..clear()
       ..addAll(backendEvents)
-      ..addAll(googleEvents);
+      ..addAll(uniqueGoogleEvents);
 
     if (reflection != null) {
       currentReflection = reflection;
@@ -178,12 +211,12 @@ class HomeController extends ChangeNotifier {
         ..addAll(_defaultQuote);
     }
 
-    setRandomBackgroundImage();
+    setRandomBackgroundImage(notify: false);
     notifyListeners();
   }
 
   Future<List<EventModel>> _fetchGoogleCalendarEventsForHome({DateTime? date}) async {
-    final accessToken = GoogleServices().accessToken;
+    final accessToken = await GoogleServices().getValidAccessToken();
     if (accessToken == null || accessToken.isEmpty) return [];
 
     final targetDate = date ?? DateTime.now();
@@ -213,13 +246,14 @@ class HomeController extends ChangeNotifier {
         date: DateFormat('EEEE, MMM d, yyyy').format(targetDate),
         startTime: extractTime(rawStart),
         endTime: extractTime(rawEnd),
-        location: json['location'] ?? '',
+        location: json['google_id'] ?? json['location'] ?? '',
         alarmTime: '',
         isCompleted: false,
         createdAt: DateTime.now().toIso8601String(),
         user: int.tryParse(UserSession().userId ?? '0') ?? 0,
         category: 'Google Calendar',
         isFavorite: false,
+        googleCalendarEventId: json['google_id'],
       );
     }).toList();
   }

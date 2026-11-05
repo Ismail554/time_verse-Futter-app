@@ -1,7 +1,4 @@
 // lib/services/event_service.dart
-import 'package:dio/dio.dart';
-import 'package:time_verse/config/services/google_service.dart';
-import 'package:time_verse/config/services/offline_service.dart';
 import 'package:time_verse/features/all_events/model/event_model.dart';
 import 'package:time_verse/features/calender/repository/add_event_repository.dart';
 import 'package:time_verse/features/calender/repository/event_detail_utils.dart';
@@ -23,88 +20,33 @@ class EventService {
   }) async {
     final backendDate = EventDateTimeUtils.parseBackendDate(dateText.trim());
 
-    try {
-      final result = await _repository.createTask(
-        title: title.trim(),
-        date: backendDate,
-        startTime: startTime,
-        endTime: endTime,
-        location: location?.trim().isEmpty == true ? null : location?.trim(),
-        alarmTime: alarmISO,
-        categoryName: categoryName?.isEmpty == true ? null : categoryName,
-        note: note?.trim(),
-        repeat: apiRepeatValue,
-        customRepeat: customRepeatMap,
-      );
+    final result = await _repository.createTask(
+      title: title.trim(),
+      date: backendDate,
+      startTime: startTime,
+      endTime: endTime,
+      location: location?.trim().isEmpty == true ? null : location?.trim(),
+      alarmTime: alarmISO,
+      categoryName: categoryName?.isEmpty == true ? null : categoryName,
+      note: note?.trim(),
+      repeat: apiRepeatValue,
+      customRepeat: customRepeatMap,
+    );
 
-      if (result != null) {
-        final resultMap = Map<String, dynamic>.from(result);
-        if (resultMap['alarm_time'] == null || resultMap['alarm_time'].toString().isEmpty) {
-          resultMap['alarm_time'] = alarmISO;
-        }
-        resultMap['is_alarm_sent'] = true;
-
-        final eventModel = EventModel.fromMap(resultMap);
-
-        // Sync to Google Calendar if access token is present
-        final googleToken = GoogleServices().accessToken;
-        if (googleToken != null && googleToken.isNotEmpty) {
-          await GoogleServices().createGoogleCalendarEvent(
-            accessToken: googleToken,
-            title: title.trim(),
-            date: backendDate,
-            startTime: startTime,
-            endTime: endTime,
-            description: note,
-            location: location,
-            repeat: apiRepeatValue,
-            customRepeat: customRepeatMap,
-          );
-        }
-
-        return eventModel;
+    if (result != null) {
+      final resultMap = Map<String, dynamic>.from(result);
+      if (resultMap['alarm_time'] == null || resultMap['alarm_time'].toString().isEmpty) {
+        resultMap['alarm_time'] = alarmISO;
       }
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.sendTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.connectionError) {
-        
-        final isCustom = apiRepeatValue?.toLowerCase() == 'custom';
-        final offlineBody = {
-          "title": title.trim(),
-          "date": backendDate,
-          "start_time": startTime,
-          "end_time": endTime,
-          "alarm_time": alarmISO,
-          if (apiRepeatValue != null) "repeat": isCustom ? "custom" : apiRepeatValue,
-          if (isCustom && customRepeatMap != null) "custom_repeat": customRepeatMap,
-          "is_alarm_sent": true,
-          "is_completed": false,
-          if (location?.trim().isNotEmpty == true) "location": location!.trim(),
-          if (categoryName?.isNotEmpty == true) "category_name": categoryName,
-          if (note?.trim().isNotEmpty == true) "type_event_description": note!.trim(),
-        };
+      resultMap['is_alarm_sent'] = true;
 
-        await OfflineSyncService().saveToQueue(offlineBody);
+      final eventModel = EventModel.fromMap(resultMap);
 
-        return EventModel(
-          id: DateTime.now().millisecondsSinceEpoch % 100000,
-          title: title.trim(),
-          description: note?.trim() ?? '',
-          alarmTime: alarmISO,
-          date: backendDate,
-          startTime: startTime,
-          endTime: endTime,
-          location: location?.trim() ?? '',
-          isCompleted: false,
-          isFavorite: false,
-          createdAt: DateTime.now().toIso8601String(),
-          user: 0,
-          userName: '',
-        );
-      }
-      rethrow;
+      // Note: Client-side Google Calendar creation is deprecated per Section 5.2.5 (BUG-06, BUG-07, FIX-ARCH-07).
+      // External Google Calendar sync is performed authoritatively and asynchronously by backend Celery workers
+      // using the pre-generated deterministic google_calendar_event_id.
+
+      return eventModel;
     }
     return null;
   }

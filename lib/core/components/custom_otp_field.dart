@@ -3,61 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
-// class CircularOtpField extends StatelessWidget {
-//   final int numberOfFields;
-//   final void Function(String) onSubmit;
-
-//   const CircularOtpField({
-//     super.key,
-//     this.numberOfFields = 4,
-//     required this.onSubmit,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final controllers = List.generate(numberOfFields, (_) => TextEditingController());
-//     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-//     return Row(
-//       mainAxisAlignment: MainAxisAlignment.center,
-//       children: List.generate(numberOfFields, (index) {
-//         return Container(
-//           width: 67,
-//           height: 65,
-//           margin: const EdgeInsets.symmetric(horizontal: 6),
-//           decoration: BoxDecoration(
-//             color: isDarkMode?AppColors.containers_bgd:AppColors.background_color, 
-//             shape: BoxShape.circle,
-//             border: Border.all(color: AppColors.fourth_color, width: 1.5),
-//           ),
-//           child: Center(
-//             child: TextFormField(
-//               controller: controllers[index],
-//               textAlign: TextAlign.center,
-//               keyboardType: TextInputType.number,
-//               maxLength: 1,
-//               style:GoogleFonts.outfit(
-//                 fontSize: 24,
-//                 color: isDarkMode? AppColors.text_color: AppColors.heading_color,
-//               ),
-//               decoration: const InputDecoration(
-//                 counterText: '',
-//                 border: InputBorder.none,
-//               ),
-//               onChanged: (value) {
-//                 if (value.isNotEmpty && index < numberOfFields - 1) {
-//                   FocusScope.of(context).nextFocus();
-//                 }
-//                 if (controllers.every((c) => c.text.isNotEmpty)) {
-//                   onSubmit(controllers.map((c) => c.text).join());
-//                 }
-//               },
-//             ),
-//           ),
-//         );
-//       }),
-//     );
-//   }
-// }
 class CircularOtpField extends StatefulWidget {
   final int numberOfFields;
   final void Function(String) onSubmit;
@@ -65,7 +10,7 @@ class CircularOtpField extends StatefulWidget {
 
   const CircularOtpField({
     super.key,
-    this.numberOfFields = 4,
+    this.numberOfFields = 6,
     required this.onSubmit,
     this.mainController,
   });
@@ -76,17 +21,22 @@ class CircularOtpField extends StatefulWidget {
 
 class _CircularOtpFieldState extends State<CircularOtpField> {
   late List<TextEditingController> _controllers;
+  late List<FocusNode> _focusNodes;
 
   @override
   void initState() {
     super.initState();
     _controllers = List.generate(widget.numberOfFields, (_) => TextEditingController());
+    _focusNodes = List.generate(widget.numberOfFields, (_) => FocusNode());
   }
 
   @override
   void dispose() {
     for (var controller in _controllers) {
       controller.dispose();
+    }
+    for (var node in _focusNodes) {
+      node.dispose();
     }
     super.dispose();
   }
@@ -99,26 +49,27 @@ class _CircularOtpFieldState extends State<CircularOtpField> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(widget.numberOfFields, (index) {
         return Container(
-          width: 70.w,
-          height: 56.h,
+          width: 44.w,
+          height: 52.h,
           decoration: BoxDecoration(
             color: isDarkMode
                 ? AppColors.containers_bgd
                 : AppColors.background_color,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(10.r),
             border: Border.all(
-              color: AppColors.fourth_color.withValues(alpha: 0.6), 
-              width: 1,
+              color: AppColors.fourth_color.withValues(alpha: 0.6),
+              width: 1.2,
             ),
           ),
           child: Center(
             child: TextFormField(
               controller: _controllers[index],
+              focusNode: _focusNodes[index],
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               maxLength: 1,
               style: GoogleFonts.outfit(
-                fontSize: 22.sp,
+                fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
                 color: isDarkMode
                     ? AppColors.text_color
@@ -127,17 +78,18 @@ class _CircularOtpFieldState extends State<CircularOtpField> {
               decoration: const InputDecoration(
                 counterText: '',
                 border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
               ),
               onChanged: (value) {
                 if (value.isNotEmpty && index < widget.numberOfFields - 1) {
-                  FocusScope.of(context).nextFocus();
+                  _focusNodes[index + 1].requestFocus();
                 }
                 if (value.isEmpty && index > 0) {
-                  FocusScope.of(context).previousFocus();
+                  _focusNodes[index - 1].requestFocus();
                 }
+                final code = _controllers.map((c) => c.text).join();
+                if (widget.mainController != null) widget.mainController!.text = code;
                 if (_controllers.every((c) => c.text.isNotEmpty)) {
-                  final code = _controllers.map((c) => c.text).join();
-                  if (widget.mainController != null) widget.mainController!.text = code;
                   widget.onSubmit(code);
                 }
               },

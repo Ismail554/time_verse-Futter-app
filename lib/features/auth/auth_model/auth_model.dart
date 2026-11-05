@@ -5,6 +5,7 @@ class User {
   final String name;
   final String? password;
   final String? email;
+
   User({
     required this.id,
     this.birthDate,
@@ -15,24 +16,29 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final combinedName = "${json['first_name'] ?? ''} ${json['last_name'] ?? ''}".trim();
+    final explicitName = json['name']?.toString().trim();
+    final resolvedName = (explicitName != null && explicitName.isNotEmpty)
+        ? explicitName
+        : (combinedName.isNotEmpty ? combinedName : 'User');
+
     return User(
-      id: json['id'] as int,
-      name: "${json['first_name'] ?? ''} ${json['last_name'] ?? ''}".trim(),
+      id: json['id'] as int? ?? 0,
+      name: resolvedName,
       email: json['email'] as String?,
       profilePicture: json['profile_picture'] as String?,
-      // 🛠️ FIX: Map the key from your backend instead of hardcoding null
       birthDate: json['birth_date'] as String?, 
       password: null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    final data = {
+    final data = <String, dynamic>{
       'id': id,
       'birth_date': birthDate,
       'profile_picture': profilePicture,
       'name': name,
-      'email':email,
+      'email': email,
     };
     if (password != null) {
       data['password'] = password!;
@@ -40,7 +46,6 @@ class User {
     return data;
   }
 
-  // ✅ Added only this
   User copyWith({
     int? id,
     String? birthDate,
@@ -55,7 +60,7 @@ class User {
       profilePicture: profilePicture ?? this.profilePicture,
       name: name ?? this.name,
       password: password ?? this.password,
-      email: email?? this.email
+      email: email ?? this.email,
     );
   }
 }

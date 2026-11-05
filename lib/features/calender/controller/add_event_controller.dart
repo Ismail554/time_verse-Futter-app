@@ -30,7 +30,7 @@ class AddEventController extends ChangeNotifier {
 
   int customRepeatCount = 1;
   String customRepeatUnit = 'week';
-  List<String> selectedDays = ['S'];
+  List<String> selectedDays = ['S-0'];
   String repeatEndType = 'Never';
   DateTime? _customEndDate;
   int customOccurrences = 1;
@@ -122,9 +122,7 @@ class AddEventController extends ChangeNotifier {
 
   String? get apiRepeatValue {
     if (selectedRepeat == 'Custom') {
-      final unitStr = customRepeatUnit.toLowerCase();
-      final plural = customRepeatCount > 1 ? 's' : '';
-      return '$customRepeatCount $unitStr$plural';
+      return 'custom';
     }
     if (selectedRepeat == null || selectedRepeat == "Don't repeat") {
       return null;
@@ -135,7 +133,29 @@ class AddEventController extends ChangeNotifier {
 
   Map<String, dynamic>? get customRepeatMap {
     if (selectedRepeat != 'Custom') return null;
-    final formattedDays = selectedDays.map((d) => d.split('-').first.trim().toUpperCase()).toList();
+
+    // RFC 5545 standard 2-letter day codes (Section 7.3)
+    const dayCodeMap = {
+      0: 'SU', // Sunday
+      1: 'MO', // Monday
+      2: 'TU', // Tuesday
+      3: 'WE', // Wednesday
+      4: 'TH', // Thursday
+      5: 'FR', // Friday
+      6: 'SA', // Saturday
+    };
+
+    final formattedDays = selectedDays.map((d) {
+      final parts = d.split('-');
+      if (parts.length > 1) {
+        final idx = int.tryParse(parts[1]);
+        if (idx != null && dayCodeMap.containsKey(idx)) {
+          return dayCodeMap[idx]!;
+        }
+      }
+      return d.toUpperCase();
+    }).toList();
+
     return {
       "repeat_every": customRepeatCount,
       "repeat_unit": customRepeatUnit.toLowerCase(),
@@ -285,6 +305,8 @@ class AddEventController extends ChangeNotifier {
           e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.connectionError) {
         final isCustom = apiRepeatValue?.toLowerCase() == 'custom';
+        final idempotencyKey = 'tv_app_${DateTime.now().millisecondsSinceEpoch}_${titleController.text.trim().hashCode.abs()}';
+
         final offlineBody = {
           "title": titleController.text.trim(),
           "date": EventDateTimeUtils.parseBackendDate(dateController.text.trim()),
@@ -303,6 +325,7 @@ class AddEventController extends ChangeNotifier {
             "category_name": selectedCategory,
           if (noteController.text.trim().isNotEmpty)
             "type_event_description": noteController.text.trim(),
+          "idempotency_key": idempotencyKey,
         };
 
         await OfflineSyncService().saveToQueue(offlineBody);

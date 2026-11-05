@@ -1,3 +1,4 @@
+import 'package:time_verse/core/utils/validators.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -92,27 +93,34 @@ class ForgotPassword extends StatelessWidget {
                     Center(
                       child: CustomButton(
                         text: "Send",
+                        loadingText: "Sending...",
+                        autoLoading: true,
+                        loadingColor: Colors.black,
                         onPressed: () async {
-                          if (forgotpasswordController.validateLoginFields()) {
-                            final success = await forgotpasswordController.sendForgotPasswordEmail();
-                            if (success) {
-                              if (context.mounted) {
-                                final email = forgotpasswordController.emailController
-                                  .text.trim();
-                                final encodedEmail = Uri.encodeComponent(email);
-                                context.push('/otp?email=$encodedEmail');
-                              }
-                            } else {
-                              if (context.mounted) {
-                                await showMessageDialog(
-                                  context,
-                                  forgotpasswordController.errorMessage ?? 'Request failed',
-                                );
-                              }
+                          final emailError = Validators.validateEmail(
+                            forgotpasswordController.emailController.text,
+                          );
+                          if (emailError != null) {
+                            if (context.mounted) {
+                              showErrorSnackBar(context, emailError);
+                            }
+                            return;
+                          }
+
+                          final success = await forgotpasswordController.sendForgotPasswordEmail();
+                          if (success) {
+                            if (context.mounted) {
+                              final email = forgotpasswordController.emailController.text.trim();
+                              final encodedEmail = Uri.encodeComponent(email);
+                              showSuccessSnackBar(context, 'Verification code sent to $email');
+                              context.push('/otp?email=$encodedEmail');
                             }
                           } else {
                             if (context.mounted) {
-                              await showMessageDialog(context, 'Please enter your email');
+                              showErrorSnackBar(
+                                context,
+                                forgotpasswordController.errorMessage ?? 'Request failed. Please try again.',
+                              );
                             }
                           }
                         },

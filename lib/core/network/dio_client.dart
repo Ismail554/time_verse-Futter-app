@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:time_verse/core/network/api_interceptor.dart';
+import 'package:time_verse/core/network/auth_interceptor.dart';
 
 /// Centralized Dio client management providing pre-configured Dio instances
-/// with request/response/error logging via [ApiLoggingInterceptor].
+/// with automatic auth header injection, timezone metadata, and request/response/error logging.
 class DioClient {
   DioClient._();
 
@@ -15,14 +16,17 @@ class DioClient {
     return _instance!;
   }
 
-  /// Creates a newly configured [Dio] instance with [ApiLoggingInterceptor]
-  /// and custom or default [BaseOptions].
+  /// Creates a newly configured [Dio] instance with [AuthAndHeadersInterceptor],
+  /// [ApiLoggingInterceptor], and custom or default [BaseOptions].
   static Dio createDio({
     BaseOptions? options,
     List<Interceptor>? additionalInterceptors,
     bool enableLogging = true,
   }) {
     final dio = Dio(options ?? defaultOptions);
+
+    // Auto-inject auth bearer token and client timezone metadata
+    dio.interceptors.add(AuthAndHeadersInterceptor());
 
     if (enableLogging) {
       dio.interceptors.add(ApiLoggingInterceptor());
@@ -68,4 +72,3 @@ extension DioLoggingExtension on Dio {
     return this;
   }
 }
-

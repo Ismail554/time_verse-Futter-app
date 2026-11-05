@@ -16,183 +16,203 @@ import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
 class EventController extends ChangeNotifier {
   String quoteText = '"Even the tallest tree\nstarts from a small seed. Your Contribution\nmatters."';
-  
+
   final GlobalKey quoteShareKey = GlobalKey();
   final Dio _dio = createDio();
   EventModel? eventDetail;
 
   Future<void> shareQuoteToSocialMedia([String? explicitText, String? bgAssetPath]) async {
-  try {
-    final boundary = quoteShareKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return;
-    final textImage = await boundary.toImage(pixelRatio: 3.0);
-    
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    final size = Size(textImage.width.toDouble(), textImage.height.toDouble());
+    try {
+      final boundary = quoteShareKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final textImage = await boundary.toImage(pixelRatio: 3.0);
 
-    // 🛠️ Dynamic Asset Background Rendering
-    if (bgAssetPath != null && bgAssetPath.isNotEmpty) {
-      final ImageStream stream = AssetImage(bgAssetPath).resolve(const ImageConfiguration());
-      final Completer<ui.Image> completer = Completer<ui.Image>();
-      late ImageStreamListener listener;
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      final size = Size(textImage.width.toDouble(), textImage.height.toDouble());
 
-      listener = ImageStreamListener((ImageInfo frame, bool _) {
-        completer.complete(frame.image);
-        stream.removeListener(listener);
-      });
-      stream.addListener(listener);
+      if (bgAssetPath != null && bgAssetPath.isNotEmpty) {
+        final ImageStream stream = AssetImage(bgAssetPath).resolve(const ImageConfiguration());
+        final Completer<ui.Image> completer = Completer<ui.Image>();
+        late ImageStreamListener listener;
 
-      final ui.Image bgUiImage = await completer.future;
+        listener = ImageStreamListener((ImageInfo frame, bool _) {
+          completer.complete(frame.image);
+          stream.removeListener(listener);
+        });
+        stream.addListener(listener);
 
-      paintImage(
-        canvas: canvas,
-        rect: Rect.fromLTWH(0, 0, size.width, size.height),
-        image: bgUiImage,
-        fit: BoxFit.cover,
-      );
-    } else {
-      final paint = Paint()..color = const Color.fromARGB(255, 112, 98, 98);
-      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-    }
+        final ui.Image bgUiImage = await completer.future;
 
-    canvas.drawImage(textImage, Offset.zero, Paint());
-
-    final finalPicture = recorder.endRecording();
-    final finalImage = await finalPicture.toImage(textImage.width, textImage.height);
-    final byteData = await finalImage.toByteData(format: ui.ImageByteFormat.png);
-    final pngBytes = byteData!.buffer.asUint8List();
-    
-    final tempDir = await getTemporaryDirectory();
-    final uniqueFileName = 'social_share_${DateTime.now().millisecondsSinceEpoch}.png';
-    final file = await File('${tempDir.path}/$uniqueFileName').create();
-    await file.writeAsBytes(pngBytes);
-
-    //final sharedContent = explicitText ?? quoteText;
-
-    debugPrint('📸 Generated pure local share file path: ${file.path}');
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: '✨Inspired by InfiniQuote',
-    );
-  } catch (e) {
-    debugPrint('⚠️ Local social media sharing failed: $e');
-  }
-}
-
-Future<void> shareQuoteAsImage([String? explicitText, String? bgAssetPath]) async {
-  try {
-    final boundary = quoteShareKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return;
-
-    final textImage = await boundary.toImage(pixelRatio: 3.0);
-    
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    final size = Size(textImage.width.toDouble(), textImage.height.toDouble());
-
-    // 🛠️ Dynamic Asset Background Rendering
-    if (bgAssetPath != null && bgAssetPath.isNotEmpty) {
-      final ImageStream stream = AssetImage(bgAssetPath).resolve(const ImageConfiguration());
-      final Completer<ui.Image> completer = Completer<ui.Image>();
-      late ImageStreamListener listener;
-
-      listener = ImageStreamListener((ImageInfo frame, bool _) {
-        completer.complete(frame.image);
-        stream.removeListener(listener);
-      });
-      stream.addListener(listener);
-
-      final ui.Image bgUiImage = await completer.future;
-
-      paintImage(
-        canvas: canvas,
-        rect: Rect.fromLTWH(0, 0, size.width, size.height),
-        image: bgUiImage,
-        fit: BoxFit.cover,
-      );
-    } else {
-      final paint = Paint()..color = const Color.fromARGB(255, 117, 90, 90);
-      canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-    }
-
-    canvas.drawImage(textImage, Offset.zero, Paint());
-
-    final finalPicture = recorder.endRecording();
-    final finalImage = await finalPicture.toImage(textImage.width, textImage.height);
-    final byteData = await finalImage.toByteData(format: ui.ImageByteFormat.png);
-    final pngBytes = byteData!.buffer.asUint8List();
-
-    await Gal.putImageBytes(pngBytes, album: 'MyQuotes');
-
-    debugPrint('📸 Image successfully saved directly to the device gallery!');
-  } catch (e) {
-    debugPrint('⚠️ Error saving quote to gallery: $e');
-  }
-}
-
-  Future<EventModel?> fetchEventDetailsById(int eventId) async {
-  if (eventDetail != null && eventDetail!.id == eventId) {
-    return eventDetail;
-  }
-
-  try {
-    final authService = AuthService();
-    final token = await authService.getToken();
-    final baseUrl = dotenv.env['BASE_URL'] ?? '';
-    final url = '${baseUrl}api/v1/event/details/?event_id=$eventId';
-
-    final response = await _dio.get(
-      url,
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ),
-    );
-
-    if (response.statusCode == 200) {
-      final data = response.data;
-      debugPrint('✅ Event details fetched: $data');
-      
-      eventDetail = EventModel(
-        id: data['id'] ?? 0,
-        userName: "${data['user_first_name'] ?? ''} ${data['user_last_name'] ?? ''}".trim(),
-        title: data['title']?.toString() ?? '',
-        description: data['description']?.toString() ?? '',
-        date: data['date']?.toString() ?? '',
-        startTime: data['start_time']?.toString() ?? '',
-        endTime: data['end_time']?.toString() ?? '',
-        location: data['location']?.toString() ?? '',
-        alarmTime: data['alarm_time']?.toString() ?? '',
-        isCompleted: data['is_completed'] ?? false,
-        isFavorite: data['is_favorite'] ?? false,
-        createdAt: data['created_at']?.toString() ?? '',
-        user: data['user'] ?? 0,
-        category: data['category']?.toString(),
-      );
-
-      if (eventDetail!.description.isNotEmpty) {
-        quoteText = eventDetail!.description;
+        paintImage(
+          canvas: canvas,
+          rect: Rect.fromLTWH(0, 0, size.width, size.height),
+          image: bgUiImage,
+          fit: BoxFit.cover,
+        );
+      } else {
+        final paint = Paint()..color = const Color.fromARGB(255, 112, 98, 98);
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
       }
 
-      debugPrint('📌 Event details stored in controller: ${eventDetail?.description}');
+      canvas.drawImage(textImage, Offset.zero, Paint());
+
+      final finalPicture = recorder.endRecording();
+      final finalImage = await finalPicture.toImage(textImage.width, textImage.height);
+      final byteData = await finalImage.toByteData(format: ui.ImageByteFormat.png);
+      final pngBytes = byteData!.buffer.asUint8List();
+
+      final tempDir = await getTemporaryDirectory();
+      final uniqueFileName = 'social_share_${DateTime.now().millisecondsSinceEpoch}.png';
+      final file = await File('${tempDir.path}/$uniqueFileName').create();
+      await file.writeAsBytes(pngBytes);
+
+      debugPrint('📸 Generated pure local share file path: ${file.path}');
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '✨Inspired by InfiniQuote',
+      );
+    } catch (e) {
+      debugPrint('⚠️ Local social media sharing failed: $e');
+    }
+  }
+
+  Future<void> shareQuoteAsImage([String? explicitText, String? bgAssetPath]) async {
+    try {
+      final boundary = quoteShareKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+
+      final textImage = await boundary.toImage(pixelRatio: 3.0);
+
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      final size = Size(textImage.width.toDouble(), textImage.height.toDouble());
+
+      if (bgAssetPath != null && bgAssetPath.isNotEmpty) {
+        final ImageStream stream = AssetImage(bgAssetPath).resolve(const ImageConfiguration());
+        final Completer<ui.Image> completer = Completer<ui.Image>();
+        late ImageStreamListener listener;
+
+        listener = ImageStreamListener((ImageInfo frame, bool _) {
+          completer.complete(frame.image);
+          stream.removeListener(listener);
+        });
+        stream.addListener(listener);
+
+        final ui.Image bgUiImage = await completer.future;
+
+        paintImage(
+          canvas: canvas,
+          rect: Rect.fromLTWH(0, 0, size.width, size.height),
+          image: bgUiImage,
+          fit: BoxFit.cover,
+        );
+      } else {
+        final paint = Paint()..color = const Color.fromARGB(255, 117, 90, 90);
+        canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+      }
+
+      canvas.drawImage(textImage, Offset.zero, Paint());
+
+      final finalPicture = recorder.endRecording();
+      final finalImage = await finalPicture.toImage(textImage.width, textImage.height);
+      final byteData = await finalImage.toByteData(format: ui.ImageByteFormat.png);
+      final pngBytes = byteData!.buffer.asUint8List();
+
+      await Gal.putImageBytes(pngBytes, album: 'MyQuotes');
+      debugPrint('📸 Image successfully saved directly to the device gallery!');
+    } catch (e) {
+      debugPrint('⚠️ Error saving quote to gallery: $e');
+    }
+  }
+
+  Future<EventModel?> fetchEventDetailsById(
+    int eventId, {
+    bool forceRefresh = false,
+    EventModel? fallbackEvent,
+  }) async {
+    if (!forceRefresh && eventDetail != null && eventDetail!.id == eventId) {
+      return eventDetail;
+    }
+
+    try {
+      final authService = AuthService();
+      final token = await authService.getToken();
+      final baseUrl = dotenv.env['BASE_URL'] ?? '';
+      final url = '${baseUrl}api/v1/event/details/?event_id=$eventId';
+
+      final response = await _dio.get(
+        url,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        debugPrint('✅ Event details fetched: $data');
+
+        eventDetail = EventModel(
+          id: data['id'] ?? 0,
+          userName: "${data['user_first_name'] ?? ''} ${data['user_last_name'] ?? ''}".trim(),
+          title: data['title']?.toString() ?? '',
+          description: data['description']?.toString() ?? '',
+          date: data['date']?.toString() ?? '',
+          startTime: data['start_time']?.toString() ?? '',
+          endTime: data['end_time']?.toString() ?? '',
+          location: data['location']?.toString() ?? '',
+          alarmTime: data['alarm_time']?.toString() ?? '',
+          isCompleted: data['is_completed'] ?? false,
+          isFavorite: data['is_favorite'] ?? false,
+          createdAt: data['created_at']?.toString() ?? '',
+          user: data['user'] ?? 0,
+          category: data['category']?.toString(),
+        );
+
+        if (eventDetail!.description.isNotEmpty) {
+          quoteText = eventDetail!.description;
+        }
+
+        notifyListeners();
+        return eventDetail;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error fetching event details from API: $e');
+    }
+
+    // Fallback if API fails or if event is a Google Calendar / offline event
+    if (fallbackEvent != null) {
+      eventDetail = fallbackEvent;
+      if (fallbackEvent.description.isNotEmpty) {
+        quoteText = fallbackEvent.description;
+      }
       notifyListeners();
       return eventDetail;
-    } else {
-      debugPrint('❌ Failed to fetch event details: ${response.statusCode}');
-      return null;
     }
-  } catch (e) {
-    debugPrint('⚠️ Error fetching event details: $e');
+
     return null;
   }
-}
 
   String formatTime(String timeString) {
-    final utc = DateTime.parse(timeString);
-    final local = utc.toLocal();
-    return DateFormat('hh:mm a').format(local);
+    if (timeString.isEmpty) return '';
+    try {
+      final dt = DateTime.tryParse(timeString);
+      if (dt != null) {
+        return DateFormat('hh:mm a').format(dt.toLocal());
+      }
+      final parts = timeString.split(':');
+      if (parts.length >= 2) {
+        final h = int.tryParse(parts[0]) ?? 0;
+        final m = int.tryParse(parts[1]) ?? 0;
+        final dummy = DateTime(2026, 1, 1, h, m);
+        return DateFormat('hh:mm a').format(dummy);
+      }
+      return timeString;
+    } catch (_) {
+      return timeString;
+    }
   }
 }

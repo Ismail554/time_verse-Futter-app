@@ -1,6 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:alarm/alarm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -8,10 +7,14 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/config/app_route/app_prefernce.dart';
+import 'package:time_verse/config/services/alerm_notification_service.dart';
+import 'package:time_verse/config/services/alerm_service.dart';
+import 'package:time_verse/config/services/google_service.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
+import 'package:time_verse/features/calender/controller/calender_controller.dart';
 import 'package:time_verse/features/home/controller/home_controller.dart';
 import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
 
@@ -21,7 +24,6 @@ void showLogoutDialog(BuildContext context) {
     barrierDismissible: false,
     builder: (_) => Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      // ignore: deprecated_member_use
       backgroundColor: Theme.of(context).dialogBackgroundColor,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
@@ -55,8 +57,8 @@ void showLogoutDialog(BuildContext context) {
                   fontSize: 12.sp,
                   fontWeight: FontWeight.normal,
                   color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.text_color
-                    : const Color(0xFF373F4B),
+                      ? AppColors.text_color
+                      : const Color(0xFF373F4B),
                 ),
               ),
               AppSpacing.h24,
@@ -66,7 +68,7 @@ void showLogoutDialog(BuildContext context) {
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.orange),
+                        side: const BorderSide(color: Colors.orange),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -84,20 +86,31 @@ void showLogoutDialog(BuildContext context) {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        // Show loading dialog
                         showDialog(
                           context: context,
                           barrierDismissible: false,
                           builder: (_) => const Center(child: CircularProgressIndicator()),
                         );
 
-                        await Alarm.stopAll();
-                        await AppPrefs.setLoggedIn(false);
-                        await AuthService().clearToken();
-                        context.read<HomeController>().todaysEvents.clear();
-                        context.read<ProfileController>().clearProfile();
+                        // 1. Notify backend to blacklist refresh token per Section 8.1.10
+                        await AuthService().logout();
 
-                        await Future.delayed(const Duration(milliseconds: 800));
+                        // 2. Full multi-user device cleanup
+                        await AlarmHelper.cancelAllAlarms();
+                        await NotificationService.cancelAllNotifications();
+                        await GoogleServices().signOut();
+                        await AppPrefs.setLoggedIn(false);
+                        await AppPrefs.setGoogleLogin(false);
+                        await AppPrefs.clearGoogleToken();
+                        await AuthService().clearToken();
+
+                        if (context.mounted) {
+                          context.read<HomeController>().resetSession();
+                          context.read<ProfileController>().clearProfile();
+                          context.read<CalendarController>().clearEvents();
+                        }
+
+                        await Future.delayed(const Duration(milliseconds: 600));
                         if (context.mounted) {
                           Navigator.pop(context); // close loader
                           context.go('/login');

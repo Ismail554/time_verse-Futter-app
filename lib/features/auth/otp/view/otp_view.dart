@@ -30,7 +30,6 @@ class OtpView extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-        // Wrapped the Column in a SingleChildScrollView to eliminate vertical overflow
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,12 +59,12 @@ class OtpView extends StatelessWidget {
                     ),
                     AppSpacing.h12, 
                     Text(
-                      'We have sand OTP code verification\nto your email',
+                      'We have sent a 6-digit OTP code\nto your email address',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w400,
-                        color: const Color(0xFF9EACBA,), 
+                        color: const Color(0xFF9EACBA), 
                         height: 1.4, 
                       ),
                     ),
@@ -79,9 +78,7 @@ class OtpView extends StatelessWidget {
                   color: isDarkMode
                       ? AppColors.containers_bgd
                       : AppColors.container,
-                  borderRadius: BorderRadius.circular(
-                    16,
-                  ), // Increased radius to match the image
+                  borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(
                     color: isDarkMode
                         ? AppColors.fourth_color
@@ -92,15 +89,15 @@ class OtpView extends StatelessWidget {
                 child: Column(
                   children: [
                     CircularOtpField(
+                      numberOfFields: 6,
                       mainController: otpController.otpController,
                       onSubmit: (code) {
-                        print('OTP entered: $code');
+                        debugPrint('OTP entered: $code');
                       },
                     ),
                     AppSpacing.h24,
                     Row(
                       children: [
-                        // Using Expanded allows dividers to stretch to edges perfectly like the image
                         Expanded(
                           child: Divider(
                             color: isDarkMode
@@ -137,7 +134,6 @@ class OtpView extends StatelessWidget {
                     AppSpacing.h24,
                     Center(
                       child: Container(
-                        // Mimics the clean bottom glow effect beneath the button
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
@@ -150,12 +146,15 @@ class OtpView extends StatelessWidget {
                         ),
                         child: CustomButton(
                           text: "Recover Account",
+                          loadingText: "Verifying...",
+                          autoLoading: true,
+                          loadingColor: Colors.black,
                           onPressed: () async {
                             final email = Uri.decodeComponent(
                               GoRouterState.of(
-                                    context,
-                                  ).uri.queryParameters['email'] ??
-                                  '',
+                                context,
+                              ).uri.queryParameters['email'] ??
+                              '',
                             );
                             final controller = Provider.of<OtpController>(
                               context,
@@ -165,11 +164,11 @@ class OtpView extends StatelessWidget {
                                 .replaceAll(RegExp(r'\s+'), '');
                             debugPrint("Entered OTP: $otp");
 
-                            if (otp.length != 4) {
+                            if (otp.length != 6) {
                               if (context.mounted) {
-                                await showMessageDialog(
+                                showErrorSnackBar(
                                   context,
-                                  'Please enter a 4-digit OTP',
+                                  'Please enter a valid 6-digit verification code.',
                                 );
                               }
                               return;
@@ -181,15 +180,19 @@ class OtpView extends StatelessWidget {
                             if (isVerified) {
                               final encodedEmail = Uri.encodeComponent(email);
                               final encodedOtp = Uri.encodeComponent(otp);
-                              context.push(
-                                '/reset_password?email=$encodedEmail&otp=$encodedOtp',
-                              );
+                              final encodedToken = Uri.encodeComponent(controller.resetToken ?? '');
+                              if (context.mounted) {
+                                showSuccessSnackBar(context, 'OTP verified successfully');
+                                context.push(
+                                  '/reset_password?email=$encodedEmail&otp=$encodedOtp&reset_token=$encodedToken',
+                                );
+                              }
                             } else {
                               if (context.mounted) {
-                                await showMessageDialog(
+                                showErrorSnackBar(
                                   context,
                                   controller.otpError ??
-                                      'OTP verification failed',
+                                      'OTP verification failed. Please try again.',
                                 );
                               }
                             }
@@ -221,7 +224,7 @@ class OtpView extends StatelessWidget {
                           : const Color(0xFFC2C2C2),
                       ),
                       children: [
-                        const TextSpan(text: 'Did not recive OTP code? '),
+                        const TextSpan(text: "Didn't receive OTP code? "),
                         TextSpan(
                           text: 'Resend',
                           style: GoogleFonts.outfit(
@@ -231,8 +234,25 @@ class OtpView extends StatelessWidget {
                             decoration: TextDecoration.underline,
                             decorationColor: AppColors.fourth_color,
                           ),
-                          recognizer: TapGestureRecognizer()..onTap = () {
-                            context.push('/forgot_pass');
+                          recognizer: TapGestureRecognizer()..onTap = () async {
+                            final email = Uri.decodeComponent(
+                              GoRouterState.of(context).uri.queryParameters['email'] ?? '',
+                            );
+                            if (email.trim().isEmpty) {
+                              showErrorSnackBar(context, 'Email not found. Please try again.');
+                              return;
+                            }
+                            final success = await otpController.resendOtp(email.trim());
+                            if (context.mounted) {
+                              if (success) {
+                                showSuccessSnackBar(context, 'A new verification code has been dispatched.');
+                              } else {
+                                showErrorSnackBar(
+                                  context,
+                                  otpController.otpError ?? 'Failed to resend code.',
+                                );
+                              }
+                            }
                           },
                         ),
                       ],

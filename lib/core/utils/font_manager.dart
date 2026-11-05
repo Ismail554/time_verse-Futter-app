@@ -62,7 +62,7 @@ class FontManager {
         GoogleFonts.montserrat(fontWeight: FontWeight.w600),
         GoogleFonts.lato(fontWeight: FontWeight.w400),
         GoogleFonts.nunito(fontWeight: FontWeight.w400),
-      ]);
+      ]).timeout(const Duration(seconds: 2));
       debugPrint('✅ [FontManager] Primary fonts preloaded successfully');
     } catch (e) {
       debugPrint('⚠️ [FontManager] Font preloading warning: $e');

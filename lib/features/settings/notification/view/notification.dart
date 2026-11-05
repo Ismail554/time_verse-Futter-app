@@ -8,8 +8,21 @@ import 'package:time_verse/core/components/custom_header.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/features/settings/notification/controller/notification_controller.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  @override
+  void dispose() {
+    try {
+      context.read<NotificationSettingsController>().stopPreviewSound();
+    } catch (_) {}
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,11 +71,8 @@ class NotificationsScreen extends StatelessWidget {
                         value: controller.allowAlarms,
                         icon: Icons.alarm,
                         onChanged: (val) async {
-                          controller.setAllowAlarms(val);
-                          if (val) {
-                            await controller.checkAndRequestExactAlarmPermission();
-                          }
-                        }
+                          await controller.setAllowAlarms(val);
+                        },
                       ),
                       AppSpacing.h12,
                       _buildSwitchTile(
@@ -85,6 +95,14 @@ class NotificationsScreen extends StatelessWidget {
                         value: controller.notificationVolume,
                         icon: Icons.volume_down_outlined,
                         onChanged: controller.setNotificationVolume,
+                        onChangeEnd: (val) {
+                          if (val > 0.02) {
+                            controller.previewAlarmSound(
+                              volumeOverride: val,
+                              durationMs: 1500,
+                            );
+                          }
+                        },
                       ),
                       AppSpacing.h12,
                       _buildSliderTile(
@@ -93,6 +111,7 @@ class NotificationsScreen extends StatelessWidget {
                         value: controller.alarmVolume,
                         icon: Icons.alarm_add_sharp,
                         onChanged: controller.setAlarmVolume,
+                        onChangeEnd: controller.commitAlarmVolumeAndPreview,
                       ),
 
                       AppSpacing.h24,
@@ -113,7 +132,6 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  // Section Header Text Helper
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -125,7 +143,6 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  // Switch Settings Item Card
   Widget _buildSwitchTile({
     required BuildContext context,
     required String title,
@@ -183,13 +200,13 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  // Volume Slider Settings Item Card
   Widget _buildSliderTile({
     required BuildContext context,
     required String title,
     required double value,
     required IconData icon,
     required ValueChanged<double> onChanged,
+    ValueChanged<double>? onChangeEnd,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
@@ -219,7 +236,7 @@ class NotificationsScreen extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '${(value * 100).toInt()}%',
+                '${(value * 100).round()}%',
                 style: GoogleFonts.outfit(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w500,
@@ -235,10 +252,11 @@ class NotificationsScreen extends StatelessWidget {
               thumbShape: RoundSliderThumbShape(enabledThumbRadius: 7.r),
             ),
             child: Slider(
-              value: value,
+              value: value.clamp(0.0, 1.0),
               activeColor: const Color(0xFFFFB703),
               inactiveColor: const Color(0xFF9CA3AF).withOpacity(0.3),
               onChanged: onChanged,
+              onChangeEnd: onChangeEnd,
             ),
           ),
         ],
@@ -246,75 +264,106 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  // Sound Picker Selector Card
   Widget _buildRingtoneSelector({required BuildContext context}) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final controller = context.read<NotificationSettingsController>();
+    final controller = context.watch<NotificationSettingsController>();
+    final bool isCustomSystemSound = controller.selectedRingtone.contains('content://');
 
-    return InkWell(
-      onTap: () async {
-        await controller.openDeviceSoundSettings();
-        await Future.delayed(const Duration(milliseconds: 800));
-        debugPrint(
-          '🔄 App regained focus. Fetching active system alarm configuration track...',
-        );
-        await controller.fetchAndSyncSystemRingtone();
-        debugPrint(
-          '🎯 Current Active Track resolved: ${controller.selectedRingtone}',
-        );
-      },
-      borderRadius: BorderRadius.circular(14.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF091222).withOpacity(0.85) : Colors.white,
-          borderRadius: BorderRadius.circular(14.r),
-          border: Border.all(
-            color: const Color(0xFFFFB703).withOpacity(0.3),
-            width: 1.1,
-          ),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xFF091222).withOpacity(0.85) : Colors.white,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(
+          color: const Color(0xFFFFB703).withOpacity(0.3),
+          width: 1.1,
         ),
-        child: Row(
-          children: [
-            Icon(Icons.music_note, color: const Color(0xFFFFB703), size: 22.sp),
-            AppSpacing.w14,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Alarm Sound',
-                    style: GoogleFonts.outfit(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: isDarkMode ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  AppSpacing.h2,
-                  // 🛠️ CHANGED: Use a consumer or tracking label block to dynamically show the path string state
-                  Consumer<NotificationSettingsController>(
-                    builder: (context, settings, child) {
-                      final String currentSound = settings.selectedRingtone;
-                      return Text(
-                        currentSound.contains('content://') ? 'System Alarm Active' : 'Configure in Device Settings',
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () async {
+              await controller.openDeviceSoundSettings();
+            },
+            borderRadius: BorderRadius.circular(10.r),
+            child: Row(
+              children: [
+                Icon(Icons.music_note, color: const Color(0xFFFFB703), size: 22.sp),
+                AppSpacing.w14,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Alarm Sound',
+                        style: GoogleFonts.outfit(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      AppSpacing.h2,
+                      Text(
+                        controller.selectedRingtoneTitle,
                         style: GoogleFonts.outfit(
                           fontSize: 12.sp,
-                          fontWeight: FontWeight.w400,
-                          color: currentSound.contains('content://') ? const Color(0xFFFFB703) : const Color(0xFF9CA3AF),
+                          fontWeight: FontWeight.w500,
+                          color: isCustomSystemSound
+                              ? const Color(0xFFFFB703)
+                              : const Color(0xFF9CA3AF),
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
-                ],
+                ),
+                IconButton(
+                  tooltip: controller.isPreviewPlaying ? 'Stop Preview' : 'Preview Sound',
+                  onPressed: () {
+                    if (controller.isPreviewPlaying) {
+                      controller.stopPreviewSound();
+                    } else {
+                      controller.previewAlarmSound(durationMs: 3500);
+                    }
+                  },
+                  icon: Icon(
+                    controller.isPreviewPlaying
+                        ? Icons.stop_circle_outlined
+                        : Icons.play_circle_outline_rounded,
+                    color: const Color(0xFFFFB703),
+                    size: 24.sp,
+                  ),
+                ),
+                Icon(
+                  Icons.tune_rounded,
+                  color: const Color(0xFFFFB703),
+                  size: 20.sp,
+                ),
+              ],
+            ),
+          ),
+          if (isCustomSystemSound) ...[
+            AppSpacing.h8,
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: controller.resetToDefaultRingtone,
+                icon: Icon(
+                  Icons.restore_rounded,
+                  size: 16.sp,
+                  color: const Color(0xFFFFB703),
+                ),
+                label: Text(
+                  'Use Default Chime',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFFFB703),
+                  ),
+                ),
               ),
             ),
-            Icon(
-              Icons.open_in_new,
-              color: const Color(0xFFFFB703),
-              size: 20.sp,
-            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -326,7 +375,7 @@ class NotificationsScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF091222).withOpacity(0.85): Colors.white,
+        color: isDarkMode ? const Color(0xFF091222).withOpacity(0.85) : Colors.white,
         borderRadius: BorderRadius.circular(14.r),
         border: Border.all(
           color: const Color(0xFFFFB703).withOpacity(0.3),
@@ -364,7 +413,7 @@ class NotificationsScreen extends StatelessWidget {
           DropdownButtonHideUnderline(
             child: DropdownButton<int>(
               value: controller.snoozeDurationMinutes,
-              dropdownColor: isDarkMode ? const Color(0xFF091222): Colors.white,
+              dropdownColor: isDarkMode ? const Color(0xFF091222) : Colors.white,
               icon: Icon(
                 Icons.arrow_drop_down,
                 color: const Color(0xFFFFB703),
@@ -394,8 +443,6 @@ class NotificationsScreen extends StatelessWidget {
   }
 }
 
-// MARK: - Structural Design Dividers
-
 class GradientDivider extends StatelessWidget {
   final bool isLeft;
   const GradientDivider({super.key, required this.isLeft});
@@ -406,7 +453,9 @@ class GradientDivider extends StatelessWidget {
       height: 1.h,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isLeft ? [Colors.transparent, const Color(0xFFFFB703).withOpacity(0.5)]: [const Color(0xFFFFB703).withOpacity(0.5), Colors.transparent],
+          colors: isLeft
+              ? [Colors.transparent, const Color(0xFFFFB703).withOpacity(0.5)]
+              : [const Color(0xFFFFB703).withOpacity(0.5), Colors.transparent],
         ),
       ),
     );

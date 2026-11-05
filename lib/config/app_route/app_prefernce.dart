@@ -8,14 +8,13 @@ class AppPrefs {
   static const _savedPasswordKey = 'saved_password';
   static const _isGoogleLoginKey = 'is_google_login';
 
-  // ✅ ADDED: Google user info keys
   static const _googleUserNameKey = 'google_user_name';
   static const _googleUserEmailKey = 'google_user_email';
   static const _googleUserPhotoKey = 'google_user_photo';
 
   static const String _keyLastMoodTrackerDate = 'last_mood_tracker_date';
 
-  /// ✅ Login persistence
+  /// Login persistence
   static Future<void> setLoggedIn(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isLoggedInKey, value);
@@ -26,7 +25,7 @@ class AppPrefs {
     return prefs.getBool(_isLoggedInKey) ?? false;
   }
 
-  /// ✅ Google login persistence
+  /// Google login persistence
   static Future<void> setGoogleLogin(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_isGoogleLoginKey, value);
@@ -37,14 +36,8 @@ class AppPrefs {
     return prefs.getBool(_isGoogleLoginKey) ?? false;
   }
 
-  /// ✅ ADDED: Save Google user info
-  // static Future<void> saveGoogleUser(String name, String email) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   await prefs.setString(_googleUserNameKey, name);
-  //   await prefs.setString(_googleUserEmailKey, email);
-  // }
-
-  static Future<void> saveGoogleUser(String name,String email, {String? photoUrl,}) async {
+  /// Save Google user info
+  static Future<void> saveGoogleUser(String name, String email, {String? photoUrl}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_googleUserNameKey, name);
     await prefs.setString(_googleUserEmailKey, email);
@@ -52,15 +45,6 @@ class AppPrefs {
       await prefs.setString(_googleUserPhotoKey, photoUrl);
     }
   }
-
-  /// ✅ ADDED: Get Google user info
-  // static Future<Map<String, String?>> getGoogleUser() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   return {
-  //     'name': prefs.getString(_googleUserNameKey),
-  //     'email': prefs.getString(_googleUserEmailKey),
-  //   };
-  // }
 
   static Future<Map<String, String?>> getGoogleUser() async {
     final prefs = await SharedPreferences.getInstance();
@@ -76,7 +60,7 @@ class AppPrefs {
     return prefs.getString(_googleUserPhotoKey);
   }
 
-  /// ✅ Landing page shown only first time
+  /// Landing page shown only first time
   static Future<bool> isFirstLaunch() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isFirstLaunchKey) ?? true;
@@ -87,7 +71,7 @@ class AppPrefs {
     await prefs.setBool(_isFirstLaunchKey, value);
   }
 
-  /// Save Google server token
+  /// Save Google OAuth server/access token
   static Future<void> saveGoogleToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('google_token', token);
@@ -103,18 +87,18 @@ class AppPrefs {
     await prefs.remove('google_token');
   }
 
-  /// ✅ Remember Me
-  static Future<void> saveRememberMe(bool remember,String email,String password,) async {
+  /// Remember Me (SEC-08: Storing plaintext password removed; only persists saved email)
+  static Future<void> saveRememberMe(bool remember, String email, [String? password]) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_rememberMeKey, remember);
 
     if (remember) {
       await prefs.setString(_savedEmailKey, email);
-      await prefs.setString(_savedPasswordKey, password);
     } else {
       await prefs.remove(_savedEmailKey);
-      await prefs.remove(_savedPasswordKey);
     }
+    // Always purge any previously stored plaintext password for security
+    await prefs.remove(_savedPasswordKey);
   }
 
   static Future<Map<String, dynamic>> getRememberedUser() async {
@@ -122,7 +106,7 @@ class AppPrefs {
     return {
       'remember': prefs.getBool(_rememberMeKey) ?? false,
       'email': prefs.getString(_savedEmailKey),
-      'password': prefs.getString(_savedPasswordKey),
+      'password': '',
     };
   }
 

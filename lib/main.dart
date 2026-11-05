@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:alarm/alarm.dart';
+import 'package:alarm/utils/alarm_set.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,9 +9,14 @@ import 'package:time_verse/config/app_route/app_providers.dart';
 import 'package:time_verse/config/app_route/init_app.dart';
 import 'package:time_verse/config/app_route/app_route.dart';
 import 'package:time_verse/config/connectivity/no_connectivity.dart';
+import 'package:time_verse/config/services/alerm_service.dart';
 import 'package:time_verse/core/theme/theme.dart';
 import 'package:time_verse/core/theme/theme_provider.dart';
+import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/font_manager.dart';
+import 'package:time_verse/features/calender/controller/calender_controller.dart';
+import 'package:time_verse/features/home/controller/home_controller.dart';
+import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
 
 void main() async {
   await initApp();
@@ -40,23 +46,33 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool hasConnection = true;
-  StreamSubscription<AlarmSettings>? _ringSubscription;
+  bool showBackOnline = false;
+  Timer? _backOnlineTimer;
+  bool isAlarmActive = false;
+  StreamSubscription<AlarmSet>? _activeRingSetSubscription;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkConnectivity();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      precacheImage(const AssetImage(ImageAssets.bgDark5), context);
+      precacheImage(const AssetImage(ImageAssets.bgLight), context);
+      precacheImage(const AssetImage(ImageAssets.logo), context);
+      precacheImage(const AssetImage(ImageAssets.logoLight), context);
+    });
+
     if (widget.initialRingingAlarm != null) {
+      isAlarmActive = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final currentRoute = appRouter.routerDelegate.currentConfiguration.uri.toString();
-        if (currentRoute != '/alarm') {
-          appRouter.push('/alarm', extra: widget.initialRingingAlarm);
-        }
+        _presentAlarmScreenIfNeeded(widget.initialRingingAlarm!);
       });
     }
 
@@ -64,63 +80,166 @@ class _MyAppState extends State<MyApp> {
       status,
     ) {
       if (!mounted) return;
-      setState(() {
-        hasConnection = !status.contains(ConnectivityResult.none);
-      });
+      final isConnected = !status.contains(ConnectivityResult.none);
+      _handleConnectivityChange(isConnected);
     });
 
-    _ringSubscription = Alarm.ringStream.stream.listen((alarmSettings) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
+    _activeRingSetSubscription = Alarm.ringing.listen((alarmSet) {
+      if (!mounted) return;
+      final ringingNow = alarmSet.alarms.isNotEmpty;
+      if (isAlarmActive != ringingNow) {
+        setState(() {
+          isAlarmActive = ringingNow;
+        });
+      }
+      if (ringingNow && !AlarmHelper.isRingScreenPresented) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _presentAlarmScreenIfNeeded(alarmSet.alarms.first);
+        });
+      }
+    });
+  }
 
-        final currentRoute = appRouter.routerDelegate.currentConfiguration.uri.toString();
-        if (currentRoute != '/alarm') {
-          appRouter.push('/alarm', extra: alarmSettings);
+  void _presentAlarmScreenIfNeeded(AlarmSettings alarmSettings) {
+    final currentRoute =
+        appRouter.routerDelegate.currentConfiguration.uri.toString();
+    if (currentRoute != '/alarm' && !AlarmHelper.isRingScreenPresented) {
+      AlarmHelper.isRingScreenPresented = true;
+      appRouter.push('/alarm', extra: alarmSettings);
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkRingingAlarmsOnResume();
+    }
+  }
+
+  Future<void> _checkRingingAlarmsOnResume() async {
+    try {
+      final alarms = await Alarm.getAlarms();
+      for (final alarm in alarms) {
+        if (await Alarm.isRinging(alarm.id)) {
+          if (mounted) {
+            setState(() {
+              isAlarmActive = true;
+            });
+            _presentAlarmScreenIfNeeded(alarm);
+          }
+          break;
         }
-      });
-    });
+      }
+    } catch (_) {}
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _connectivitySubscription?.cancel();
-    _ringSubscription?.cancel();
+    _activeRingSetSubscription?.cancel();
+    _backOnlineTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _checkConnectivity() async {
     final status = await Connectivity().checkConnectivity();
     if (!mounted) return;
+    final isConnected = !status.contains(ConnectivityResult.none);
     setState(() {
-      hasConnection = status != ConnectivityResult.none;
+      hasConnection = isConnected;
+    });
+  }
+
+  void _handleConnectivityChange(bool isConnected) {
+    if (hasConnection == isConnected) return;
+
+    if (isConnected && !hasConnection) {
+      _backOnlineTimer?.cancel();
+      setState(() {
+        hasConnection = true;
+        showBackOnline = true;
+      });
+      _backOnlineTimer = Timer(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            showBackOnline = false;
+          });
+        }
+      });
+      _onReconnected();
+    } else {
+      _backOnlineTimer?.cancel();
+      setState(() {
+        hasConnection = isConnected;
+        showBackOnline = false;
+      });
+    }
+  }
+
+  void _onReconnected() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      try {
+        final navContext = appRouter.routerDelegate.navigatorKey.currentContext;
+        if (navContext != null && navContext.mounted) {
+          final profile = navContext.read<ProfileController>();
+          final home = navContext.read<HomeController>();
+          final cal = navContext.read<CalendarController>();
+          if (home.isInitialized) {
+            home.loadHomeScreenData(profile, date: home.selectedDate);
+          }
+          cal.fetchUpcomingEvents();
+        }
+      } catch (e) {
+        debugPrint('ℹ️ Reconnect auto-refresh notice: $e');
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(390, 846),
-      minTextAdapt: true,
-      builder: (context, child) {
-        return AppProviders(
-          child: Builder(
-            builder: (context) {
-              final themeProvider = Provider.of<ThemeProvider>(context);
+    return AppProviders(
+      child: ScreenUtilInit(
+        designSize: const Size(390, 846),
+        minTextAdapt: true,
+        builder: (context, child) {
+          return Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
               return MaterialApp.router(
                 debugShowCheckedModeBanner: false,
-                title: 'InfiniQoute',
+                title: 'InfiniQuote',
                 theme: lightTheme,
                 darkTheme: darkTheme,
                 themeMode: themeProvider.themeMode,
                 routerConfig: appRouter,
-                builder: (context, child) {
-                  return hasConnection ? child! : const NoInternetWidget();
+                builder: (context, routerChild) {
+                  final isBannerVisible = !hasConnection || showBackOnline;
+                  return Scaffold(
+                    backgroundColor: Colors.transparent,
+                    body: Column(
+                      children: [
+                        NoInternetTopBar(
+                          hasConnection: hasConnection,
+                          showBackOnline: showBackOnline,
+                        ),
+                        Expanded(
+                          child: MediaQuery.removePadding(
+                            context: context,
+                            removeTop: isBannerVisible,
+                            child: routerChild ?? const SizedBox.shrink(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 },
               );
             },
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:time_verse/core/network/network.dart';
 import 'package:flutter/material.dart';
@@ -127,29 +128,36 @@ class CalendarController extends ChangeNotifier {
     return false;
   }
 
+  void clearEvents() {
+    _events.clear();
+    notifyListeners();
+  }
+
   Future<T?> runWithLoaderAndTimer<T>({
     required BuildContext context,
     required Future<T> Function() task,
   }) async {
     final startTime = DateTime.now();
+    Timer? periodicTimer;
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            Duration elapsed = DateTime.now().difference(startTime);
-
-            Future.delayed(const Duration(seconds: 1), () {
-              if (context.mounted) setState(() {});
+          builder: (dialogContext, setState) {
+            periodicTimer ??= Timer.periodic(const Duration(seconds: 1), (_) {
+              if (dialogContext.mounted) {
+                setState(() {});
+              }
             });
+            final elapsed = DateTime.now().difference(startTime);
 
             return Center(
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.transparent,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -171,6 +179,7 @@ class CalendarController extends ChangeNotifier {
       final result = await task();
       return result;
     } finally {
+      periodicTimer?.cancel();
       if (context.mounted) Navigator.pop(context);
     }
   }

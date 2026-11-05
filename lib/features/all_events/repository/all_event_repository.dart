@@ -14,8 +14,6 @@ class AllEventRepository {
   String formatEventDate(String rawDate) {
     final startDateTime = DateTime.tryParse(rawDate);
     if (startDateTime == null) return rawDate;
-
-    // Directly returns actual date string instead of returning 'Today'
     return DateFormat('EEEE, MMM d, yyyy').format(startDateTime);
   }
 
@@ -31,27 +29,24 @@ class AllEventRepository {
     return gEventsData.map((json) {
       final rawStart = json['startTime'] ?? '';
       final rawEnd = json['endTime'] ?? '';
-
-      String extractTime(String isoString) {
-        final dt = DateTime.tryParse(isoString);
-        return dt != null ? DateFormat('HH:mm').format(dt) : '';
-      }
+      final rawDate = json['date'] ?? '';
 
       return EventModel(
         id: json['id'].hashCode,
         userName: UserSession().username ?? 'Google Calendar',
         title: json['title'] ?? '',
         description: json['description'] ?? '',
-        date: formatEventDate(rawStart),
-        startTime: extractTime(rawStart),
-        endTime: extractTime(rawEnd),
+        date: formatEventDate(rawDate.isNotEmpty ? rawDate : rawStart),
+        startTime: rawStart,
+        endTime: rawEnd,
         location: json['google_id'] ?? '',
         alarmTime: json['alarm_time'] ?? '',
         isCompleted: false,
-        createdAt: rawStart.isNotEmpty ? rawStart : DateTime.now().toIso8601String(),
+        createdAt: rawDate.isNotEmpty ? rawDate : (rawStart.isNotEmpty ? rawStart : DateTime.now().toIso8601String()),
         user: int.tryParse(UserSession().userId ?? '0') ?? 0,
         category: 'Google Calendar',
         isFavorite: false,
+        googleCalendarEventId: json['google_id'],
       );
     }).toList();
   }
@@ -78,28 +73,22 @@ class AllEventRepository {
       return data.where((json) => json['user'] == currentUserId).map((json) {
         final rawDate = json['date']?.toString() ?? '';
         final formattedDate = formatEventDate(rawDate);
-        return EventModel(
-          id: json['id'] ?? 0,
-          userName: json['user_name']?.toString() ?? '',
-          title: json['title']?.toString() ?? '',
-          description: json['description']?.toString() ?? '',
-          date: formattedDate,
-          startTime: json['start_time']?.toString() ?? '',
-          endTime: json['end_time']?.toString() ?? '',
-          location: json['location']?.toString() ?? '',
-          alarmTime: json['alarm_time']?.toString() ?? '',
-          isCompleted: json['is_completed'] ?? false,
-          createdAt: rawDate.isNotEmpty ? rawDate : (json['created_at']?.toString() ?? ''),
-          user: json['user'] ?? 0,
-          category: json['category']?.toString(),
-          isFavorite: json['is_favorite'] ?? false,
-        );
+        return EventModel.fromMap({
+          ...json,
+          'date': formattedDate,
+        });
       }).toList();
     }
     return [];
   }
 
-  Future<bool> deleteEvent(EventModel event, {String deleteType = 'single'}) async {
+  /// Deletes an event or single recurring occurrence per Section 7.3 & 8.3.7.
+  /// If [deleteType] is 'single', target [dateStr] (format yyyy-MM-dd) is appended to exception_dates on the server.
+  Future<bool> deleteEvent(
+    EventModel event, {
+    String deleteType = 'single',
+    String? dateStr,
+  }) async {
     if (event.category == 'Google Calendar') {
       final accessToken = await GoogleServices().getValidAccessToken();
       if (accessToken == null || accessToken.isEmpty) {
@@ -107,7 +96,8 @@ class AllEventRepository {
         return false;
       }
 
-      final googleEventId = event.location.isNotEmpty ? event.location : event.createdAt;
+      final googleEventId = event.googleCalendarEventId ??
+          (event.location.isNotEmpty ? event.location : event.createdAt);
       if (googleEventId.isEmpty) return false;
 
       return await GoogleServices().deleteGoogleCalendarEvent(
@@ -119,16 +109,42 @@ class AllEventRepository {
     final token = await AuthService().getToken();
     final baseUrl = dotenv.env['BASE_URL'] ?? '';
 
-    final response = await _dio.delete(
-      '${baseUrl}api/v1/event/delete/${event.id}/?delete_type=$deleteType',
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      ),
-    );
+    try {
+      final effectiveId = event.masterEventId ?? event.id;
 
-    return response.statusCode == 200 || response.statusCode == 204;
+      String query = '?delete_type=$deleteType';
+      if (deleteType == 'single') {
+        final targetDate = dateStr ?? _extractIsoDate(event.date);
+        if (targetDate.isNotEmpty) {
+          query += '&date=$targetDate';
+        }
+      }
+
+      final response = await _dio.delete(
+        '${baseUrl}api/v1/event/delete/$effectiveId/$query',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint('⚠️ Error deleting API event: $e');
+      return false;
+    }
+  }
+
+  String _extractIsoDate(String rawDate) {
+    final parsed = DateTime.tryParse(rawDate);
+    if (parsed != null) return DateFormat('yyyy-MM-dd').format(parsed);
+    try {
+      final formatted = DateFormat('EEEE, MMM d, yyyy').parse(rawDate);
+      return DateFormat('yyyy-MM-dd').format(formatted);
+    } catch (_) {
+      return rawDate;
+    }
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
-
 import 'dart:async';
 
 class OtpController extends ChangeNotifier {
@@ -8,6 +7,7 @@ class OtpController extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
   String? otpError;
+  String? resetToken;
 
   Timer? _timer;
   int _secondsRemaining = 180; // 3 minutes
@@ -25,7 +25,7 @@ class OtpController extends ChangeNotifier {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0) {
         _secondsRemaining--;
-        notifyListeners(); // 🔥 update UI
+        notifyListeners();
       } else {
         timer.cancel();
       }
@@ -34,7 +34,7 @@ class OtpController extends ChangeNotifier {
 
   void disposeControllers() {
     otpController.dispose();
-    _timer?.cancel(); // ✅ important
+    _timer?.cancel();
   }
 
   bool areFieldsFilled(List<TextEditingController> controllers) {
@@ -54,6 +54,8 @@ class OtpController extends ChangeNotifier {
     try {
       final response = await _authService.verifyOtp(email, otp);
       if (response['success'] == true) {
+        resetToken = response['reset_token']?.toString();
+        otpError = null;
         return true;
       } else {
         otpError = response['error'] ?? response['message'];
@@ -61,6 +63,23 @@ class OtpController extends ChangeNotifier {
       }
     } catch (e) {
       otpError = 'Something went wrong. Please try again.';
+      return false;
+    }
+  }
+
+  Future<bool> resendOtp(String email) async {
+    try {
+      final response = await _authService.resendOtp(email);
+      if (response['success'] == true) {
+        startTimer();
+        otpError = null;
+        return true;
+      } else {
+        otpError = response['error'] ?? response['message'];
+        return false;
+      }
+    } catch (e) {
+      otpError = 'Failed to resend code. Please try again.';
       return false;
     }
   }
