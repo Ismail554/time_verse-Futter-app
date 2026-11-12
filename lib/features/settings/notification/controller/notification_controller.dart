@@ -28,6 +28,7 @@ class NotificationSettingsController extends ChangeNotifier {
   int _snoozeDurationMinutes = 5;
   String _selectedRingtoneTitle = 'Default Chime';
   bool _isPreviewPlaying = false;
+  int _previewSessionId = 0;
 
   NotificationSettingsController() {
     loadSettingsFromPrefs();
@@ -75,6 +76,7 @@ class NotificationSettingsController extends ChangeNotifier {
     } else {
       await NotificationService.requestNotificationPermission();
     }
+    await AlarmHelper.syncActiveAlarmsWithSettings();
   }
 
   Future<void> setAllowAlarms(bool val) async {
@@ -88,6 +90,7 @@ class NotificationSettingsController extends ChangeNotifier {
     } else {
       await checkAndRequestExactAlarmPermission();
     }
+    await AlarmHelper.syncActiveAlarmsWithSettings();
   }
 
   Future<void> setVibrate(bool val) async {
@@ -102,6 +105,10 @@ class NotificationSettingsController extends ChangeNotifier {
       } catch (_) {
         HapticFeedback.mediumImpact();
       }
+    } else {
+      try {
+        await _platform.invokeMethod('cancelVibration');
+      } catch (_) {}
     }
     await AlarmHelper.syncActiveAlarmsWithSettings();
   }
@@ -111,6 +118,19 @@ class NotificationSettingsController extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_prefNotificationVolume, _settings.notificationVolume);
+  }
+
+  Future<void> commitNotificationVolumeAndPreview(double val) async {
+    await setNotificationVolume(val);
+    await AlarmHelper.syncActiveAlarmsWithSettings();
+    if (_settings.notificationVolume > 0.02) {
+      await previewAlarmSound(
+        volumeOverride: _settings.notificationVolume,
+        durationMs: 1500,
+      );
+    } else {
+      await stopPreviewSound();
+    }
   }
 
   Future<void> setAlarmVolume(double val) async {
@@ -166,6 +186,7 @@ class NotificationSettingsController extends ChangeNotifier {
   }
 
   Future<void> previewAlarmSound({double? volumeOverride, int durationMs = 3000}) async {
+    final sessionId = ++_previewSessionId;
     try {
       _isPreviewPlaying = true;
       notifyListeners();
@@ -175,19 +196,22 @@ class NotificationSettingsController extends ChangeNotifier {
         'durationMs': durationMs,
       });
       Future.delayed(Duration(milliseconds: durationMs), () {
-        if (_isPreviewPlaying) {
+        if (_previewSessionId == sessionId && _isPreviewPlaying) {
           _isPreviewPlaying = false;
           notifyListeners();
         }
       });
     } catch (e) {
-      _isPreviewPlaying = false;
-      notifyListeners();
+      if (_previewSessionId == sessionId) {
+        _isPreviewPlaying = false;
+        notifyListeners();
+      }
       debugPrint('⚠️ Failed to preview alarm sound: $e');
     }
   }
 
   Future<void> stopPreviewSound() async {
+    _previewSessionId++;
     try {
       await _platform.invokeMethod('stopRingtone');
     } catch (_) {}

@@ -17,9 +17,15 @@ class AuthAndHeadersInterceptor extends QueuedInterceptor {
     RequestInterceptorHandler handler,
   ) async {
     try {
-      // 1. Inject Authorization header if not already supplied
-      final currentAuth = options.headers['Authorization'];
-      if (currentAuth == null || currentAuth.toString().trim().isEmpty) {
+      // 1. Inject Authorization header if missing, empty, or corrupted ('Bearer null')
+      final currentAuth = options.headers['Authorization']?.toString().trim();
+      final isInvalidAuth = currentAuth == null ||
+          currentAuth.isEmpty ||
+          currentAuth == 'Bearer' ||
+          currentAuth == 'Bearer null' ||
+          currentAuth == 'Bearer undefined';
+
+      if (isInvalidAuth) {
         final prefs = await SharedPreferences.getInstance();
         final token = prefs.getString('access_token');
         if (token != null && token.trim().isNotEmpty) {
@@ -27,7 +33,13 @@ class AuthAndHeadersInterceptor extends QueuedInterceptor {
         }
       }
 
-      // 2. Inject client IANA timezone metadata for server date/time conversions
+      // 2. Ensure FormData requests use multipart/form-data with proper boundary
+      if (options.data is FormData) {
+        options.headers.remove('Content-Type');
+        options.headers.remove('content-type');
+      }
+
+      // 3. Inject client IANA timezone metadata for server date/time conversions
       final now = DateTime.now();
       options.headers['X-Timezone'] = clientTimezone;
       options.headers['X-Timezone-Offset'] = now.timeZoneOffset.inMinutes.toString();
@@ -41,7 +53,10 @@ class AuthAndHeadersInterceptor extends QueuedInterceptor {
   @override
   Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
     final path = err.requestOptions.path;
-    final isAuthEndpoint = path.contains('/login') ||
+    final isGoogleEndpoint = err.requestOptions.uri.host.contains('googleapis.com') ||
+        path.contains('googleapis.com');
+    final isAuthEndpoint = isGoogleEndpoint ||
+        path.contains('/login') ||
         path.contains('/register') ||
         path.contains('/token/refresh') ||
         path.contains('/forget_password') ||
@@ -52,7 +67,11 @@ class AuthAndHeadersInterceptor extends QueuedInterceptor {
       debugPrint('🚨 [Auth] 401 Unauthorized received for: ${err.requestOptions.uri.path}. Initiating token refresh...');
       try {
         final authService = AuthService();
-        final newAccessToken = await authService.refreshAccessToken();
+        final currentToken = err.requestOptions.headers['Authorization']
+            ?.toString()
+            .replaceFirst('Bearer ', '')
+            .trim();
+        final newAccessToken = await authService.refreshAccessToken(failedToken: currentToken);
 
         if (newAccessToken != null && newAccessToken.isNotEmpty) {
           debugPrint('🔄 Retrying original request with rotated access token...');
@@ -84,12 +103,13 @@ class AuthAndHeadersInterceptor extends QueuedInterceptor {
 
           return handler.resolve(response);
         } else {
-          debugPrint('⚠️ Token refresh failed.');
+          debugPrint('⚠️ Token refresh failed. Triggering session cleanup.');
           final refreshToken = await authService.getRefreshToken();
           if (refreshToken == null || JwtDecoder.isExpired(refreshToken)) {
             debugPrint('🚨 Refresh token is expired or absent. Clearing session.');
             await authService.clearToken();
             await AppPrefs.setLoggedIn(false);
+            AuthService.onSessionExpired?.call();
           }
         }
       } catch (e) {

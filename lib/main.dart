@@ -3,6 +3,7 @@ import 'package:alarm/alarm.dart';
 import 'package:alarm/utils/alarm_set.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/config/app_route/app_providers.dart';
@@ -207,34 +208,50 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         builder: (context, child) {
           return Consumer<ThemeProvider>(
             builder: (context, themeProvider, _) {
-              return MaterialApp.router(
-                debugShowCheckedModeBanner: false,
-                title: 'InfiniQuote',
-                theme: lightTheme,
-                darkTheme: darkTheme,
-                themeMode: themeProvider.themeMode,
-                routerConfig: appRouter,
-                builder: (context, routerChild) {
-                  final isBannerVisible = !hasConnection || showBackOnline;
-                  return Scaffold(
-                    backgroundColor: Colors.transparent,
-                    body: Column(
+              final isDarkMode = themeProvider.themeMode == ThemeMode.dark ||
+                  (themeProvider.themeMode == ThemeMode.system &&
+                      MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
+              final overlayStyle = SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                statusBarBrightness:
+                    isDarkMode ? Brightness.dark : Brightness.light,
+                statusBarIconBrightness:
+                    isDarkMode ? Brightness.light : Brightness.dark,
+                systemStatusBarContrastEnforced: false,
+                systemNavigationBarColor: Colors.transparent,
+                systemNavigationBarDividerColor: Colors.transparent,
+                systemNavigationBarIconBrightness:
+                    isDarkMode ? Brightness.light : Brightness.dark,
+                systemNavigationBarContrastEnforced: false,
+              );
+
+              return AnnotatedRegion<SystemUiOverlayStyle>(
+                value: overlayStyle,
+                child: MaterialApp.router(
+                  debugShowCheckedModeBanner: false,
+                  title: 'InfiniQuote',
+                  theme: lightTheme,
+                  darkTheme: darkTheme,
+                  themeMode: themeProvider.themeMode,
+                  routerConfig: appRouter,
+                  builder: (context, routerChild) {
+                    return Stack(
                       children: [
-                        NoInternetTopBar(
-                          hasConnection: hasConnection,
-                          showBackOnline: showBackOnline,
-                        ),
-                        Expanded(
-                          child: MediaQuery.removePadding(
-                            context: context,
-                            removeTop: isBannerVisible,
-                            child: routerChild ?? const SizedBox.shrink(),
+                        routerChild ?? const SizedBox.shrink(),
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: NoInternetTopBar(
+                            hasConnection: hasConnection,
+                            showBackOnline: showBackOnline,
                           ),
                         ),
                       ],
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               );
             },
           );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:time_verse/config/app_route/nav_config.dart';
-import 'package:time_verse/features/calender/view/add_event.dart';
 
 class BottomNavController extends ChangeNotifier {
   int selectedIndex = 0;
@@ -33,34 +32,30 @@ class BottomNavController extends ChangeNotifier {
 //   context.push(appRoutes[index > 2 ? index - 1 : index]); // adjust index shift
 // }
 
-void navigateTo(int index, BuildContext context) {
-  if (appRoutes[index] == '/add') {
-    showBottomCard = true;
+  void navigateTo(int index, BuildContext context) {
+    if (index == 2 || (index < appRoutes.length && appRoutes[index] == '/add')) {
+      context.push('/add');
+      return;
+    }
+
+    selectedIndex = index;
+    showBottomCard = false;
     notifyListeners();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const AddEventPage(),
-    );
-    return;
-  }
+    if (index < appRoutes.length) {
+      final targetRoute = appRoutes[index];
+      try {
+        final currentPath = GoRouterState.of(context).uri.path;
+        if (currentPath == targetRoute) return;
+      } catch (_) {}
 
-  // 1. Update the local tab indexing state safely first
-  selectedIndex = index;
-  showBottomCard = false;
-  notifyListeners(); // This triggers the bar rebuild cleanly
-
-  // 2. 🛠️ THE PERMANENT FIX: Defer the push to the next frame macro-task loop.
-  // This completely eliminates the framework traversal error while using .push()
-  // so your history stack stays alive and context.pop() works perfectly.
-  Future.delayed(Duration.zero, () {
-    if (context.mounted) {
-      context.push(appRoutes[index]);
+      Future.delayed(Duration.zero, () {
+        if (context.mounted) {
+          context.go(targetRoute);
+        }
+      });
     }
-  });
-}
+  }
 
   void hideBottomCard() {
     if (showBottomCard) {

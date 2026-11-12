@@ -195,6 +195,10 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     GoRoute(
+      path: '/calendar',
+      redirect: (_, __) => '/calender',
+    ),
+    GoRoute(
       path: '/home',
       pageBuilder: (context, state) => buildAppTransitionPage(
         context: context,

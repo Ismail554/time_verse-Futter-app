@@ -13,6 +13,8 @@ import 'package:time_verse/features/calender/repository/event_detail_utils.dart'
 
 class AlarmHelper {
   static final Set<int> _scheduledIds = {};
+  static final Map<int, EventModel> _cachedEvents = {};
+  static final Map<int, List<DateTime>> _cachedOccurrences = {};
   static const MethodChannel _ringtoneChannel = MethodChannel('com.infiniquote.app/ringtone');
   static bool isRingScreenPresented = false;
 
@@ -66,7 +68,8 @@ class AlarmHelper {
     }
   }
 
-  /// Schedules event alarms without requiring a BuildContext, reading saved settings directly from SharedPreferences.
+  /// Schedules event alarms or fallback notifications without requiring a BuildContext,
+  /// reading saved settings directly from SharedPreferences.
   static Future<void> scheduleEventAlarm([
     BuildContext? context,
     EventModel? event,
@@ -76,11 +79,7 @@ class AlarmHelper {
 
     final prefs = await SharedPreferences.getInstance();
     final allowAlarms = prefs.getBool('notif_allow_alarms') ?? true;
-    if (!allowAlarms) {
-      debugPrint('⛔ Alarms disabled in settings. Skipping schedule for ${event.title}');
-      return;
-    }
-
+    final allowNotifs = prefs.getBool('notif_allow_notifications') ?? true;
     final shouldVibrate = prefs.getBool('notif_vibrate') ?? true;
     final alarmVolume = (prefs.getDouble('alarm_volume') ?? 1.0).clamp(0.05, 1.0);
     final audioPath = resolveAlarmAudioPath(prefs);
@@ -105,13 +104,22 @@ class AlarmHelper {
           int maxOccurrences = 30;
 
           if (event.customRepeat != null) {
-            interval = int.tryParse(event.customRepeat!['interval']?.toString() ?? '1') ?? 1;
-            unit = event.customRepeat!['unit']?.toString() ?? 'week';
-            endType = event.customRepeat!['end_type']?.toString() ?? 'Never';
-            if (event.customRepeat!['days_of_week'] is List) {
-              customDays.addAll(
-                (event.customRepeat!['days_of_week'] as List).map((e) => e.toString()),
-              );
+            interval = int.tryParse(
+                  (event.customRepeat!['interval'] ?? event.customRepeat!['repeat_every'])
+                          ?.toString() ??
+                      '1',
+                ) ??
+                1;
+            unit = (event.customRepeat!['unit'] ?? event.customRepeat!['repeat_unit'])
+                    ?.toString() ??
+                'week';
+            endType = (event.customRepeat!['end_type'] ?? event.customRepeat!['ends'])
+                    ?.toString() ??
+                'Never';
+            final rawDays =
+                event.customRepeat!['days_of_week'] ?? event.customRepeat!['repeat_days'];
+            if (rawDays is List) {
+              customDays.addAll(rawDays.map((e) => e.toString()));
             }
             if (event.customRepeat!['end_date'] != null) {
               endDate = DateTime.tryParse(event.customRepeat!['end_date'].toString()) ?? endDate;
@@ -137,6 +145,33 @@ class AlarmHelper {
           timesToSchedule.add(parsed);
         }
       }
+    }
+
+    if (timesToSchedule.isNotEmpty && event.id > 0) {
+      _cachedEvents[event.id] = event;
+      _cachedOccurrences[event.id] = List<DateTime>.from(timesToSchedule);
+    }
+
+    if (!allowAlarms) {
+      if (allowNotifs) {
+        final now = DateTime.now();
+        for (int i = 0; i < timesToSchedule.length; i++) {
+          final localTime = timesToSchedule[i];
+          if (localTime.isBefore(now)) continue;
+          final notifId = computeNotificationId(event.id, i);
+          await NotificationService.scheduleNotification(
+            id: notifId,
+            title: event.title,
+            body: event.description,
+            alarmTime: localTime,
+            payload: event.id.toString(),
+          );
+        }
+        debugPrint('🔔 Alarms disabled -> Scheduled fallback notification(s) for ${event.title}');
+      } else {
+        debugPrint('⛔ Alarms & Notifications disabled in settings. Skipping ${event.title}');
+      }
+      return;
     }
 
     final now = DateTime.now();
@@ -193,20 +228,57 @@ class AlarmHelper {
     }
   }
 
-  /// Synchronizes all currently scheduled future alarms when the user updates
-  /// Vibration, Alarm Volume, or Selected Ringtone in Notification Settings.
+  /// Synchronizes all currently scheduled future alarms & fallback notifications when the user updates
+  /// Allow Alarms, Allow Notifications, Vibration, Volume, or Selected Ringtone in Notification Settings.
   static Future<void> syncActiveAlarmsWithSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final allowAlarms = prefs.getBool('notif_allow_alarms') ?? true;
-      if (!allowAlarms) return;
-
+      final allowNotifs = prefs.getBool('notif_allow_notifications') ?? true;
       final shouldVibrate = prefs.getBool('notif_vibrate') ?? true;
       final alarmVolume = (prefs.getDouble('alarm_volume') ?? 1.0).clamp(0.05, 1.0);
       final audioPath = resolveAlarmAudioPath(prefs);
+      final now = DateTime.now();
+
+      if (!allowAlarms) {
+        // Ensure full-screen alarms are stopped
+        try {
+          await Alarm.stopAll();
+        } catch (_) {}
+        _scheduledIds.clear();
+
+        if (!allowNotifs) {
+          await NotificationService.cancelAllNotifications();
+          return;
+        }
+
+        // Re-schedule fallback notifications for cached events so updated vibration/volume takes effect
+        await NotificationService.cancelAllNotifications();
+        for (final entry in _cachedEvents.entries) {
+          final event = entry.value;
+          final occurrences = _cachedOccurrences[entry.key] ?? const <DateTime>[];
+          for (int i = 0; i < occurrences.length; i++) {
+            final dt = occurrences[i];
+            if (dt.isAfter(now)) {
+              await NotificationService.scheduleNotification(
+                id: computeNotificationId(event.id, i),
+                title: event.title,
+                body: event.description,
+                alarmTime: dt,
+                payload: event.id.toString(),
+              );
+            }
+          }
+        }
+        debugPrint('🔄 Synced ${_cachedEvents.length} events to fallback notifications.');
+        return;
+      }
+
+      // allowAlarms == true: clear fallback notifications to prevent duplicate firing on the same second
+      await NotificationService.cancelAllNotifications();
 
       final allAlarms = await Alarm.getAlarms();
-      final now = DateTime.now();
+      final activeIds = <int>{};
 
       for (final alarm in allAlarms) {
         if (alarm.dateTime.isAfter(now) && !(await Alarm.isRinging(alarm.id))) {
@@ -220,9 +292,26 @@ class AlarmHelper {
               ),
             ),
           );
+          activeIds.add(alarm.id);
+          _scheduledIds.add(alarm.id);
         }
       }
-      debugPrint('🔄 Synchronized ${allAlarms.length} active alarms with updated settings.');
+
+      // Also restore any cached events that were previously cancelled when allowAlarms was toggled off
+      for (final entry in _cachedEvents.entries) {
+        final event = entry.value;
+        final occurrences = _cachedOccurrences[entry.key] ?? const <DateTime>[];
+        for (int i = 0; i < occurrences.length; i++) {
+          final dt = occurrences[i];
+          final alarmId = computeAlarmId(event.id, i);
+          if (dt.isAfter(now) && !activeIds.contains(alarmId)) {
+            await scheduleEventAlarm(null, event, occurrences);
+            break;
+          }
+        }
+      }
+
+      debugPrint('🔄 Synchronized active alarms with updated settings.');
     } catch (e) {
       debugPrint('⚠️ Error syncing active alarms with settings: $e');
     }
@@ -230,6 +319,8 @@ class AlarmHelper {
 
   /// Cancels base event ID and all possible occurrence IDs for an event
   static Future<void> stopAlarmForEvent(int eventId) async {
+    _cachedEvents.remove(eventId);
+    _cachedOccurrences.remove(eventId);
     await stopAlarm(eventId);
 
     for (int i = 0; i < 50; i++) {

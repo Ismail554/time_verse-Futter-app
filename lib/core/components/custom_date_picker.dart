@@ -39,14 +39,17 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
     return Dialog(
       backgroundColor: backgroundColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      insetPadding: EdgeInsets.all(20.w),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      clipBehavior: Clip.antiAlias,
+      insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
         children: [
           // --- TOP HEADER BANNER ---
           Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
             decoration: BoxDecoration(
               color: const Color(0xFFF5B301),
               borderRadius: BorderRadius.only(
@@ -62,7 +65,7 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
                   style: GoogleFonts.outfit(
                     // ignore: deprecated_member_use
                     color: Colors.white.withOpacity(0.8),
-                    fontSize: 16.sp,
+                    fontSize: 15.sp,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -71,7 +74,7 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
                   DateFormat('EEE, MMMM d').format(_temporarySelectedDay),
                   style: GoogleFonts.outfit(
                     color: Colors.white,
-                    fontSize: 24.sp,
+                    fontSize: 22.sp,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -81,7 +84,7 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
           
           // --- CALENDAR GRID ---
           Padding(
-            padding: EdgeInsets.all(12.w),
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
             child: TableCalendar(
               // 🛠️ FIX: Strips hour/minute parameters out so focusedDay can never fall behind firstDay
               firstDay: DateTime(
@@ -92,15 +95,18 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
               lastDay: DateTime.utc(2100, 12, 31),
               focusedDay: _temporaryFocusedDay,
               headerVisible: true,
+              rowHeight: 40.h,
+              daysOfWeekHeight: 22.h,
               
               headerStyle: HeaderStyle(
                 titleCentered: true,
                 formatButtonVisible: false,
+                headerPadding: EdgeInsets.symmetric(vertical: 4.h),
                 leftChevronIcon: Icon(Icons.chevron_left, color: const Color(0xFFF5B301), size: 24.sp),
                 rightChevronIcon: Icon(Icons.chevron_right, color: const Color(0xFFF5B301), size: 24.sp),
                 titleTextStyle: GoogleFonts.outfit(
                   color: const Color(0xFFF5B301),
-                  fontSize: 18.sp,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -177,9 +183,10 @@ class _CustomDatePickerDialogState extends State<CustomDatePickerDialog> {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

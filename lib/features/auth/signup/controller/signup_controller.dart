@@ -1,5 +1,6 @@
 // ignore_for_file: non_constant_identifier_names
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:time_verse/config/app_route/app_prefernce.dart';
@@ -81,12 +82,36 @@ class SignupController extends ChangeNotifier {
 
   String? pickedImagePath;
 
-  void pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      pickedImagePath = picked.path;
-      notifyListeners();
+  Future<void> pickImage({int maxSizeInMB = 5}) async {
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1080,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+      if (picked != null) {
+        final file = File(picked.path);
+        if (await file.exists()) {
+          final bytes = await file.length();
+          if (bytes > maxSizeInMB * 1024 * 1024) {
+            signupError = 'Image exceeds ${maxSizeInMB}MB limit. Please choose a smaller photo.';
+            notifyListeners();
+            return;
+          }
+        }
+        pickedImagePath = picked.path;
+        signupError = null;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error picking image: $e');
     }
+  }
+
+  void clearImage() {
+    pickedImagePath = null;
+    notifyListeners();
   }
 
   void updateGender(String? value) {

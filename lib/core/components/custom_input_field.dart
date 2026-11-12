@@ -5,179 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/colors.dart';
 
-// class CustomInputField extends StatefulWidget {
-//   final String label;
-//   final String hintText;
-//   final TextEditingController controller;
-//   final bool isPassword;
-//   final double fontSize;
-//   final Color? textColor;
-//   final Color? borderColor;
-//   final Color? labelColor;
-//   final double? height;
-//   final double? hintFontSize;
-//   final String? prefixSvgPath;
-//   final Color? prefixIconColor;
-//   final Color? suffixIconColor;
-
-//   const CustomInputField({
-//     super.key,
-//     required this.label,
-//     required this.hintText,
-//     required this.controller,
-//     this.isPassword = false,
-//     this.fontSize = 14,
-//     this.textColor,
-//     this.borderColor,
-//     this.labelColor,
-//     this.height,
-//     this.hintFontSize,
-//     this.prefixSvgPath,
-//     this.prefixIconColor,
-//     this.suffixIconColor,
-//   });
-
-//   @override
-//   State<CustomInputField> createState() => _CustomInputFieldState();
-// }
-
-// class _CustomInputFieldState extends State<CustomInputField> {
-//   bool _obscureText = true;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         RichText(
-//           text: TextSpan(
-//             children: [
-//               TextSpan(
-//                 text: widget.label.replaceAll('*', ''),
-//                 style: GoogleFonts.playfairDisplay(
-//                   fontWeight: FontWeight.w500,
-//                   fontSize: widget.fontSize.sp,
-//                   color: widget.textColor ??(isDarkMode
-//                     ? AppColors.text_color
-//                     : AppColors.heading_color),
-//                 ),
-//               ),
-//               if (widget.label.contains('*'))
-//                 TextSpan(
-//                   text: '*',
-//                   style: GoogleFonts.outfit(
-//                     fontWeight: FontWeight.w500,
-//                     fontSize: widget.fontSize.sp,
-//                     color: Colors.red,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//         SizedBox(height: 5.h),
-//         SizedBox(
-//           height: widget.height ?? 45.h,
-//           child: Container(
-//             decoration: BoxDecoration(
-//               borderRadius: BorderRadius.circular(8.r),
-//               border: Border.all(
-//                 color: const Color(0xFFDF951F),
-//                 width: 1.w,
-//               ),
-//               gradient: const LinearGradient(
-//                 begin: Alignment.topCenter,
-//                 end: Alignment.bottomCenter,
-//                 colors: [
-//                   Color(0xFF020617), // top
-//                   Color(0xFF111827), // middle
-//                   Color(0xFF0F172A), // bottom
-//                 ],
-//               ),
-//               boxShadow: [
-//                 BoxShadow(
-//                   color:const Color(0xFFDF951F).withValues(alpha: 0.12),
-//                   blurRadius: 6,
-//                   spreadRadius: 0.5,
-//                 ),
-//               ],
-//             ),
-//             child: TextFormField(
-//               controller: widget.controller,
-//               obscureText:widget.isPassword ? _obscureText : false,
-//               textAlignVertical: TextAlignVertical.center,
-//               style: GoogleFonts.outfit(
-//                 fontSize: 14.sp,
-//                 fontWeight: FontWeight.w400,
-//                 color: Colors.white,
-//               ),
-//               decoration: InputDecoration(
-//                 filled: true,
-//                 fillColor: Colors.transparent,
-//                 contentPadding: EdgeInsets.symmetric(
-//                   horizontal: 14.w,
-//                   vertical: 12.h,
-//                 ),
-
-//                 border: InputBorder.none,
-//                 enabledBorder: InputBorder.none,
-//                 focusedBorder: InputBorder.none,
-//                 errorBorder: InputBorder.none,
-//                 focusedErrorBorder: InputBorder.none,
-//                 hintText: widget.hintText,
-//                 hintStyle: GoogleFonts.outfit(
-//                   fontSize:widget.hintFontSize ?? 12.sp,
-//                   fontWeight: FontWeight.w400,
-//                   color: const Color(0xFF9CA3AF),
-//                 ),
-
-//                 prefixIcon: widget.prefixSvgPath != null
-//                   ? Padding(
-//                     padding: EdgeInsets.all(14.w),
-//                       child: SvgPicture.asset(
-//                         widget.prefixSvgPath!,
-//                         width: 16.w,
-//                         height: 16.h,
-//                         colorFilter: ColorFilter.mode(
-//                           widget.prefixIconColor ??const Color(0xFF9CA3AF),
-//                             BlendMode.srcIn,
-//                           ),
-//                         ),
-//                       )
-//                     : null,
-//                   suffixIcon: widget.isPassword
-//                     ? IconButton(
-//                         icon: Icon(
-//                           _obscureText
-//                             ? Icons.visibility_outlined
-//                             : Icons.visibility_off_outlined,
-//                           color: widget.suffixIconColor ??const Color(0xFF9CA3AF),
-//                           size: 20.sp,
-//                         ),
-//                         onPressed: () {
-//                           setState(() {
-//                             _obscureText = !_obscureText;
-//                         }
-//                       );
-//                     },
-//                   )
-//                 : null,
-//               ),
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }
-
 class CustomInputField extends StatefulWidget {
   final String label;
   final String hintText;
   final TextEditingController controller;
   final bool isPassword;
-  final bool isReadOnly; // 🛠️ ADDED: read-only property declaration
+  final bool isReadOnly;
   final double fontSize;
   final Color? textColor;
   final Color? borderColor;
@@ -187,6 +20,9 @@ class CustomInputField extends StatefulWidget {
   final String? prefixSvgPath;
   final Color? prefixIconColor;
   final Color? suffixIconColor;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onFieldSubmitted;
 
   const CustomInputField({
     super.key,
@@ -194,7 +30,7 @@ class CustomInputField extends StatefulWidget {
     required this.hintText,
     required this.controller,
     this.isPassword = false,
-    this.isReadOnly = false, // 🛠️ ADDED: default value assignment
+    this.isReadOnly = false,
     this.fontSize = 14,
     this.textColor,
     this.borderColor,
@@ -204,6 +40,9 @@ class CustomInputField extends StatefulWidget {
     this.prefixSvgPath,
     this.prefixIconColor,
     this.suffixIconColor,
+    this.keyboardType,
+    this.textInputAction,
+    this.onFieldSubmitted,
   });
 
   @override
@@ -228,18 +67,21 @@ class _CustomInputFieldState extends State<CustomInputField> {
                 style: GoogleFonts.playfairDisplay(
                   fontWeight: FontWeight.w500,
                   fontSize: widget.fontSize.sp,
-                  color: widget.textColor ?? (isDarkMode ? AppColors.text_color: AppColors.heading_color),
+                  color: widget.textColor ??
+                      (isDarkMode
+                          ? AppColors.text_color
+                          : AppColors.heading_color),
                 ),
               ),
               if (widget.label.contains('*'))
                 TextSpan(
-                text: '*',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.w500,
-                  fontSize: widget.fontSize.sp,
-                  color: Colors.red,
+                  text: '*',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w500,
+                    fontSize: widget.fontSize.sp,
+                    color: Colors.red,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -248,36 +90,42 @@ class _CustomInputFieldState extends State<CustomInputField> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8.r),
             border: Border.all(
-              color: widget.borderColor ?? const Color(0xFFDF951F).withValues(alpha: 0.4),
+              color: widget.borderColor ??
+                  // ignore: deprecated_member_use
+                  const Color(0xFFDF951F).withOpacity(0.4),
               width: 1.w,
             ),
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: Theme.of(context).brightness == Brightness.dark
-                ? [
-                const Color(0xFF020617),
-                const Color(0xFF111827),
-                const Color(0xFF0F172A),
-              ]
-              : [
-                Colors.white,
-                Colors.white,
-              ],
+              colors: isDarkMode
+                  ? const [
+                      Color(0xFF020617),
+                      Color(0xFF111827),
+                      Color(0xFF0F172A),
+                    ]
+                  : const [
+                      Colors.white,
+                      Colors.white,
+                    ],
             ),
-            boxShadow: Theme.of(context).brightness == Brightness.dark
-              ? [
-                BoxShadow(
-                  color: const Color(0xFFDF951F).withValues(alpha: 0.12),
-                  blurRadius: 6,
-                  spreadRadius: 0.5,
-                ),
-              ]
-            : null,
+            boxShadow: isDarkMode
+                ? [
+                    BoxShadow(
+                      // ignore: deprecated_member_use
+                      color: const Color(0xFFDF951F).withOpacity(0.12),
+                      blurRadius: 6,
+                      spreadRadius: 0.5,
+                    ),
+                  ]
+                : null,
           ),
           child: TextFormField(
             controller: widget.controller,
-            readOnly: widget.isReadOnly, 
+            readOnly: widget.isReadOnly,
+            keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
+            onFieldSubmitted: widget.onFieldSubmitted,
             obscureText: widget.isPassword ? _obscureText : false,
             style: GoogleFonts.outfit(
               fontSize: 14.sp,
@@ -290,7 +138,8 @@ class _CustomInputFieldState extends State<CustomInputField> {
               fillColor: Colors.transparent,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 16.w,
-                vertical: widget.height != null ? (widget.height! / 3.5).h : 15.h,
+                vertical:
+                    widget.height != null ? (widget.height! / 3.5).h : 15.h,
               ),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -304,33 +153,36 @@ class _CustomInputFieldState extends State<CustomInputField> {
                 color: const Color(0xFF4B5563),
               ),
               prefixIcon: widget.prefixSvgPath != null
-                ? Padding(
-                  padding: EdgeInsets.all(14.w),
-                    child: SvgPicture.asset(
-                      widget.prefixSvgPath!,
-                      width: 16.w,
-                      height: 16.h,
-                      colorFilter: ColorFilter.mode(
-                        widget.prefixIconColor ?? const Color(0xFF9CA3AF),
-                        BlendMode.srcIn,
+                  ? Padding(
+                      padding: EdgeInsets.all(14.w),
+                      child: SvgPicture.asset(
+                        widget.prefixSvgPath!,
+                        width: 16.w,
+                        height: 16.h,
+                        colorFilter: ColorFilter.mode(
+                          widget.prefixIconColor ?? const Color(0xFF9CA3AF),
+                          BlendMode.srcIn,
+                        ),
                       ),
-                    ),
-                  )
-                : null,
-                suffixIcon: widget.isPassword
+                    )
+                  : null,
+              suffixIcon: widget.isPassword
                   ? IconButton(
-                    icon: Icon(
-                    _obscureText? Icons.visibility_outlined: Icons.visibility_off_outlined,
-                    color: widget.suffixIconColor ?? const Color(0xFF9CA3AF),
-                    size: 20.sp,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText = !_obscureText;
-                    });
-                  },
-                )
-              : null,
+                      icon: Icon(
+                        _obscureText
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color:
+                            widget.suffixIconColor ?? const Color(0xFF9CA3AF),
+                        size: 20.sp,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
+                    )
+                  : null,
             ),
           ),
         ),

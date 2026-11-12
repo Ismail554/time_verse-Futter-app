@@ -15,6 +15,7 @@ class NotificationService {
 
   static const String _channelVibrateId = 'event_reminder_vibrate_v3';
   static const String _channelSilentVibrationId = 'event_reminder_novibrate_v3';
+  static const String _channelVibrateOnlyId = 'event_reminder_vibrate_only_v3';
   static const String _channelSilentSoundId = 'event_reminder_muted_v3';
 
   static Future<void> init() async {
@@ -60,6 +61,18 @@ class NotificationService {
           importance: Importance.max,
           playSound: true,
           enableVibration: false,
+        ),
+      );
+
+      await androidImpl.createNotificationChannel(
+        AndroidNotificationChannel(
+          _channelVibrateOnlyId,
+          'Event Reminders (Vibration Only)',
+          description: 'Event notifications with vibration and no sound',
+          importance: Importance.max,
+          playSound: false,
+          enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 400, 200, 400]),
         ),
       );
 
@@ -137,6 +150,9 @@ class NotificationService {
       if (!playSound && !shouldVibrate) {
         selectedChannelId = _channelSilentSoundId;
         selectedChannelName = 'Event Reminders (Silent)';
+      } else if (!playSound && shouldVibrate) {
+        selectedChannelId = _channelVibrateOnlyId;
+        selectedChannelName = 'Event Reminders (Vibration Only)';
       } else if (shouldVibrate) {
         selectedChannelId = _channelVibrateId;
         selectedChannelName = 'Event Reminders (Sound & Vibration)';

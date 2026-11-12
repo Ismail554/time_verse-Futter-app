@@ -12,8 +12,8 @@ import 'package:time_verse/core/utils/colors.dart';
 
 class CustomHeaderBar extends StatelessWidget {
   final String title;
-  final double leftSpacing;
-  final double rightSpacing;
+  final double? leftSpacing;
+  final double? rightSpacing;
   final bool showLeftLine;
   final bool showRightLine;
   final VoidCallback? onBackPressed; 
@@ -21,8 +21,8 @@ class CustomHeaderBar extends StatelessWidget {
   const CustomHeaderBar({
     super.key,
     required this.title,
-    required this.leftSpacing,
-    required this.rightSpacing,
+    this.leftSpacing,
+    this.rightSpacing,
     this.showLeftLine = true,
     this.showRightLine = true,
     this.onBackPressed, 
@@ -36,7 +36,6 @@ class CustomHeaderBar extends StatelessWidget {
     return Column(
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             IconButton(
               onPressed: () {
@@ -52,26 +51,29 @@ class CustomHeaderBar extends StatelessWidget {
                 height: 37.h,
               ),
             ),
-            SizedBox(width: leftSpacing),
-            Text(
-              title,
-              style: GoogleFonts.playfairDisplay(
-                fontWeight: FontWeight.bold,
-                fontSize: 17.sp,
-                color: isDarkMode
-                ? AppColors.text_color
-                : AppColors.heading_color,
+            Expanded(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.playfairDisplay(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 17.sp,
+                  color: isDarkMode
+                      ? AppColors.text_color
+                      : AppColors.heading_color,
+                ),
               ),
             ),
-            SizedBox(width: rightSpacing),
             IconButton(
               onPressed: () {
                 themeProvider.toggleTheme();
               },
               icon: SvgPicture.asset(
                 isDarkMode
-                ? IconAssets.themeDark
-                : IconAssets.lightTheme,
+                    ? IconAssets.themeDark
+                    : IconAssets.lightTheme,
                 width: 37.w,
                 height: 37.h,
               ),

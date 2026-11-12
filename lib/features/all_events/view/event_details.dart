@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:time_verse/core/components/custom_bottomnav.dart';
 import 'package:time_verse/core/components/custom_button.dart';
@@ -78,6 +79,20 @@ class EventDetails extends StatelessWidget {
               final int randomImageNum = (Random(randomSeed).nextInt(11)) + 1;
               final String prefix = isDarkMode ? 'db_' : 'wb_';
               final String currentBgPath = AiImageAssets.getImage(isDark: isDarkMode, index: randomImageNum);
+
+              final displayDate = _formatDisplayDate(eventDetail.date);
+              final displayTime = _formatTimeWithoutSeconds(eventDetail.startTime);
+
+              final String dateTimeText;
+              if (displayDate.isNotEmpty && displayTime.isNotEmpty) {
+                dateTimeText = '$displayDate • $displayTime';
+              } else if (displayDate.isNotEmpty) {
+                dateTimeText = displayDate;
+              } else if (displayTime.isNotEmpty) {
+                dateTimeText = displayTime;
+              } else {
+                dateTimeText = '';
+              }
               
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0.w, vertical: 40.0.h),
@@ -119,7 +134,7 @@ class EventDetails extends StatelessWidget {
                             children: [
                               AppSpacing.h20,
                               Text(
-                                eventDetail.title.isEmpty ? 'Traveling to grandmother' : eventDetail.title,
+                                eventDetail.title.isNotEmpty ? eventDetail.title : 'Event Details',
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.playfair(
                                   fontSize: 27.sp,
@@ -127,16 +142,18 @@ class EventDetails extends StatelessWidget {
                                   color: isDarkMode ? Colors.white : Colors.black,
                                 ),
                               ),
-                              AppSpacing.h6,
-                              Text(
-                                '${eventDetail.date.isNotEmpty ? eventDetail.date : "Today"} • ${eventDetail.startTime.isEmpty ? "2:00 PM" : eventDetail.startTime}',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.manrope(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDarkMode ? const Color(0xFF9CA3AF) : Colors.black,
+                              if (dateTimeText.isNotEmpty) ...[
+                                AppSpacing.h6,
+                                Text(
+                                  dateTimeText,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.manrope(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDarkMode ? const Color(0xFF9CA3AF) : Colors.black,
+                                  ),
                                 ),
-                              ),
+                              ],
                               AppSpacing.h14,
                               Row(
                                 children: [
@@ -314,5 +331,42 @@ class EventDetails extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatTimeWithoutSeconds(String raw) {
+    final clean = raw.trim();
+    if (clean.isEmpty) return '';
+
+    // Check for 12-hour formats e.g. "02:30:00 PM", "2:30:00 PM", "02:30 PM", "2:30 PM"
+    for (final pattern in ['h:mm:ss a', 'hh:mm:ss a', 'h:mm a', 'hh:mm a']) {
+      try {
+        final dt = DateFormat(pattern).parse(clean);
+        return DateFormat('h:mm a').format(dt);
+      } catch (_) {}
+    }
+
+    // Check for 24-hour formats e.g. "14:30:00", "09:15:00", "14:30"
+    final parts = clean.split(':');
+    if (parts.length >= 2) {
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1].split(' ')[0]);
+      if (hour != null && minute != null) {
+        final dt = DateTime(2000, 1, 1, hour, minute);
+        return DateFormat('h:mm a').format(dt);
+      }
+    }
+
+    return clean;
+  }
+
+  String _formatDisplayDate(String raw) {
+    final clean = raw.trim();
+    if (clean.isEmpty) return '';
+
+    final parsed = DateTime.tryParse(clean);
+    if (parsed != null) {
+      return DateFormat('MMM d, yyyy').format(parsed);
+    }
+    return clean;
   }
 }

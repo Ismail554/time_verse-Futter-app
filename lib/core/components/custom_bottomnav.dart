@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -14,7 +16,7 @@ class NavItem {
   final String iconPath;
   final String route;
 
-  NavItem({
+  const NavItem({
     required this.label,
     required this.iconPath,
     required this.route,
@@ -22,139 +24,198 @@ class NavItem {
 }
 
 final List<NavItem> navItems = [
-  NavItem(label: 'Home', iconPath: IconAssets.home, route: '/home'),
-  NavItem(label: 'Calendar', iconPath: IconAssets.calender, route: '/calendar'),
-  NavItem(label: 'Add', iconPath: IconAssets.addIcon, route: '/add'),
-  NavItem(label: 'Saved', iconPath: IconAssets.save, route: '/saved'),
-  NavItem(label: 'Settings', iconPath: IconAssets.setting, route: '/settings'),
+  const NavItem(label: 'Home', iconPath: IconAssets.home, route: '/home'),
+  const NavItem(label: 'Calendar', iconPath: IconAssets.calender, route: '/calender'),
+  const NavItem(label: 'Add', iconPath: IconAssets.addIcon, route: '/add'),
+  const NavItem(label: 'Saved', iconPath: IconAssets.save, route: '/saved'),
+  const NavItem(label: 'Settings', iconPath: IconAssets.setting, route: '/settings'),
 ];
 
 class CustomBottomNavBar extends StatelessWidget {
   const CustomBottomNavBar({super.key});
 
+  int _resolveActiveIndex(BuildContext context, int fallback) {
+    try {
+      final path = GoRouterState.of(context).uri.path;
+      if (path == '/home' || path.startsWith('/home')) return 0;
+      if (path == '/calender' || path == '/calendar' || path.startsWith('/calender')) return 1;
+      if (path == '/add' || path.startsWith('/add')) return 2;
+      if (path == '/saved' || path.startsWith('/saved')) return 3;
+      if (path == '/settings' || path.startsWith('/settings') || path.startsWith('/profile')) return 4;
+    } catch (_) {}
+    return fallback;
+  }
+
+  void _onTabTapped(BuildContext context, BottomNavController controller, int index, String route) {
+    controller.navigateTo(index, context);
+  }
+
+  Widget _buildTabItem({
+    required BuildContext context,
+    required NavItem item,
+    required int index,
+    required bool isSelected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final activeColor = AppColors.fourth_color;
+    final inactiveColor = isDark ? Colors.white60 : const Color(0xFF7A8B9E);
+
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              item.iconPath,
+              width: 22.w,
+              height: 22.h,
+              colorFilter: ColorFilter.mode(
+                isSelected ? activeColor : inactiveColor,
+                BlendMode.srcIn,
+              ),
+            ),
+            AppSpacing.h2,
+            Text(
+              item.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                fontSize: 10.5.sp,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? activeColor : inactiveColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final List<NavItem> standardItems = [
-      navItems[0], // Home
-      navItems[1], // Calendar
-      navItems[3], // Saved
-      navItems[4], // Settings
-    ];
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Consumer<BottomNavController>(
       builder: (context, controller, _) {
-        final selectedIndex = controller.selectedIndex;
-        final bottomPadding = MediaQuery.paddingOf(context).bottom;
+        final activeIndex = _resolveActiveIndex(context, controller.selectedIndex);
+        final barHeight = 62.h + bottomPadding;
+        final totalHeight = 78.h + bottomPadding;
 
         return SizedBox(
-          height: 130.h,
+          height: totalHeight,
           child: Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.bottomCenter,
             children: [
-              // Removed SafeArea wrapper to allow the container to sit at the absolute screen edge
+              // 1. Navigation Bar Base Container
               Container(
-                height: 64.h + bottomPadding,
+                height: barHeight,
                 padding: EdgeInsets.only(
-                  top: 4.h,
-                  bottom: bottomPadding > 0 ? bottomPadding : 4.h, // Dynamic system offset
+                  top: 6.h,
+                  bottom: bottomPadding > 0 ? bottomPadding : 6.h,
                 ),
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.containers_bgd : Colors.white,
                   border: Border(
                     top: BorderSide(
                       color: isDark
-                          ? AppColors.text_color
-                          : AppColors.heading_color,
-                      width: 0.4,
+                          ? Colors.white.withOpacity(0.08)
+                          : Colors.black.withOpacity(0.06),
+                      width: 0.8,
                     ),
                   ),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 4),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.35 : 0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, -3),
+                    ),
                   ],
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(4, (index) {
-                    final item = standardItems[index];
-                    final originalIndex = navItems.indexOf(item);
-                    final isSelected = originalIndex == selectedIndex;
-
-                    return Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          debugPrint(
-                            'Tapped index: $originalIndex (${item.label})',
-                          );
-                          controller.navigateTo(originalIndex, context);
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(
-                              item.iconPath,
-                              width: 22.w,
-                              height: 22.h,
-                              colorFilter: ColorFilter.mode(
-                                isSelected
-                                    ? AppColors.fourth_color
-                                    : (isDark
-                                        ? Colors.white
-                                        : const Color(0xFF636363)),
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                            AppSpacing.h2,
-                            Text(
-                              item.label,
-                              style: GoogleFonts.inter(
-                                  fontSize: 10.2.sp,
-                                  fontWeight: FontWeight.normal,
-                                  color: isSelected
-                                      ? AppColors.fourth_color
-                                      : (isDark
-                                          ? Colors.white
-                                          : const Color(0xFF636363)),
-                                ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
+                  children: [
+                    // Slot 0: Home
+                    _buildTabItem(
+                      context: context,
+                      item: navItems[0],
+                      index: 0,
+                      isSelected: activeIndex == 0,
+                      isDark: isDark,
+                      onTap: () => _onTabTapped(context, controller, 0, navItems[0].route),
+                    ),
+                    // Slot 1: Calendar
+                    _buildTabItem(
+                      context: context,
+                      item: navItems[1],
+                      index: 1,
+                      isSelected: activeIndex == 1,
+                      isDark: isDark,
+                      onTap: () => _onTabTapped(context, controller, 1, navItems[1].route),
+                    ),
+                    // Slot 2: Dedicated space reservation for Center Floating Action Button
+                    const Expanded(
+                      child: SizedBox(),
+                    ),
+                    // Slot 3: Saved
+                    _buildTabItem(
+                      context: context,
+                      item: navItems[3],
+                      index: 3,
+                      isSelected: activeIndex == 3,
+                      isDark: isDark,
+                      onTap: () => _onTabTapped(context, controller, 3, navItems[3].route),
+                    ),
+                    // Slot 4: Settings
+                    _buildTabItem(
+                      context: context,
+                      item: navItems[4],
+                      index: 4,
+                      isSelected: activeIndex == 4,
+                      isDark: isDark,
+                      onTap: () => _onTabTapped(context, controller, 4, navItems[4].route),
+                    ),
+                  ],
                 ),
               ),
+
+              // 2. Center Floating Action Button (Elevated perfectly over Slot 2)
               Positioned(
-                bottom: 64.h + bottomPadding + 5.h,
+                bottom: bottomPadding + 14.h,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    debugPrint(
-                      'SUCCESS: Tapped floating action button (Pushing Add Page)',
-                    );
+                    debugPrint('Tapped floating action button: Navigating to /add');
                     context.push('/add');
                   },
                   child: Container(
-                    width: 58.w,
-                    height: 58.h,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFA500),
+                    width: 56.w,
+                    height: 56.h,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFA500),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
+                          color: const Color(0xFFFFA500).withOpacity(0.4),
+                          blurRadius: 12.r,
+                          spreadRadius: 1.r,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 6.r,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
                     child: Center(
                       child: Container(
-                        width: 32.w,
-                        height: 32.h,
+                        width: 30.w,
+                        height: 30.h,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2.w),

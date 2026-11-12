@@ -15,6 +15,7 @@ import 'package:time_verse/core/theme/theme_provider.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
+import 'package:time_verse/features/all_events/model/event_model.dart';
 import 'package:time_verse/features/home/controller/home_controller.dart';
 import 'package:time_verse/features/home/widget/feebpback_popup.dart';
 import 'package:time_verse/features/settings/profile/controller/profile_controller.dart';
@@ -30,6 +31,7 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   final GlobalKey _shareKey = GlobalKey();
   late final ScrollController _dateScrollController;
+  bool _isPastEventsExpanded = false;
 
   @override
   void initState() {
@@ -673,8 +675,8 @@ class _HomeViewState extends State<HomeView> {
                 AppSpacing.h16,
                 Consumer<HomeController>(
                   builder: (context, controller, _) {
-                    final events = controller.todaysEvents;
-                    if (events.isEmpty) {
+                    final rawEvents = controller.todaysEvents;
+                    if (rawEvents.isEmpty) {
                       return Text(
                         'No Event yet',
                         style: GoogleFonts.outfit(
@@ -684,6 +686,12 @@ class _HomeViewState extends State<HomeView> {
                         ),
                       );
                     }
+
+                    // Sort chronologically and validate past vs present/future
+                    final allItems = _parseAndSortScheduleItems(rawEvents, controller.selectedDate);
+                    final activeItems = allItems.where((i) => !i.isPast).toList();
+                    final pastItems = allItems.where((i) => i.isPast).toList();
+
                     return Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(16.w),
@@ -699,88 +707,168 @@ class _HomeViewState extends State<HomeView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Column(
-                            children: List.generate(events.length, (index) {
-                              final event = events[index];
-                              final isLastItem = index == events.length - 1;
-                              String calculatedPeriod = "Morning";
-                              try {
-                                final startHourStr = (event.startTime).split(':').first.trim();
-                                final int hourValue = int.parse(startHourStr);
-                                if (hourValue == 12) {
-                                  calculatedPeriod = "Noon";
-                                } else if (hourValue > 12 && hourValue <= 16) {
-                                  calculatedPeriod = "Afternoon";
-                                } else if (hourValue >= 17 && hourValue <= 20) {
-                                  calculatedPeriod = "Evening";
-                                } else if (hourValue >= 21) {
-                                  calculatedPeriod = "Night";
-                                }
-                              } catch (_) {
-                                calculatedPeriod = "Morning";
-                              }
+                          // 1. Present and Future Events (Active, chronologically sorted with period headers)
+                          if (activeItems.isNotEmpty)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: List.generate(activeItems.length, (index) {
+                                final item = activeItems[index];
+                                final isLastItem = index == activeItems.length - 1 && pastItems.isEmpty;
 
-                              bool showHeaderLabel = false;
-                              if (index == 0) {
-                                showHeaderLabel = true;
-                              } else {
-                                final priorEvent = events[index - 1];
-                                String priorPeriod = "Morning";
-                                try {
-                                  final priorHourStr = (priorEvent.startTime).split(':').first.trim();
-                                  final int priorHourValue = int.parse(priorHourStr);
-                                  if (priorHourValue == 12) {
-                                    priorPeriod = "Noon";
-                                  } else if (priorHourValue > 12 && priorHourValue <= 16) {
-                                    priorPeriod = "Afternoon";
-                                  } else if (priorHourValue >= 17 && priorHourValue <= 20) {
-                                    priorPeriod = "Evening";
-                                  } else if (priorHourValue >= 21) {
-                                    priorPeriod = "Night";
-                                  }
-                                } catch (_) {}
-                                if (calculatedPeriod != priorPeriod) {
+                                bool showHeaderLabel = false;
+                                if (index == 0) {
                                   showHeaderLabel = true;
+                                } else {
+                                  final priorItem = activeItems[index - 1];
+                                  if (item.period != priorItem.period) {
+                                    showHeaderLabel = true;
+                                  }
                                 }
-                              }
-                              return Column(
-                                key: ValueKey(event.id),
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (showHeaderLabel) ...[
-                                    Padding(
-                                      padding: EdgeInsets.only(
-                                        bottom: 16.h,
-                                        top: index > 0 ? 16.h : 0,
-                                      ),
-                                      child: Text(
-                                        calculatedPeriod,
-                                        style: GoogleFonts.playfairDisplay(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20.sp,
-                                          color: const Color(0xFFFFA500),
-                                          fontStyle: FontStyle.italic,
+
+                                return Column(
+                                  key: ValueKey('active_${item.event.id}_$index'),
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (showHeaderLabel)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom: 16.h,
+                                          top: index > 0 ? 16.h : 0,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              item.period,
+                                              style: GoogleFonts.playfairDisplay(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20.sp,
+                                                color: const Color(0xFFFFA500),
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                            if (item.isPresent) ...[
+                                              AppSpacing.w8,
+                                              Container(
+                                                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFFFA500).withOpacity(0.18),
+                                                  borderRadius: BorderRadius.circular(10.r),
+                                                  border: Border.all(
+                                                    color: const Color(0xFFFFA500).withOpacity(0.6),
+                                                    width: 0.8,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Container(
+                                                      width: 6.w,
+                                                      height: 6.h,
+                                                      decoration: const BoxDecoration(
+                                                        color: Color(0xFFFFA500),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                    AppSpacing.w4,
+                                                    Text(
+                                                      'HAPPENING NOW',
+                                                      style: GoogleFonts.outfit(
+                                                        fontSize: 10.sp,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: const Color(0xFFFFA500),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                       ),
+                                    _buildScheduleEvent(
+                                      context,
+                                      item.event.id,
+                                      item.event.title,
+                                      item.displayTime,
+                                      item.event.category_name ?? '',
+                                      item.event.location,
+                                      item.event.description,
+                                      item.isPresent ? const Color(0xFFFFA500) : Colors.grey,
+                                      isDarkMode,
+                                      lightModeBackgroundColor: AppColors.l_schedule_clr1,
+                                      isLastItem: isLastItem,
+                                      isPresent: item.isPresent,
+                                      isPast: false,
                                     ),
                                   ],
-                                  _buildScheduleEvent(
-                                    context,
-                                    event.id,
-                                    event.title,
-                                    '${event.startTime} - ${event.endTime}',
-                                    event.category_name ?? '',
-                                    event.location,
-                                    event.description,
-                                    Colors.grey,
-                                    isDarkMode,
-                                    lightModeBackgroundColor: AppColors.l_schedule_clr1,
-                                    isLastItem: isLastItem,
+                                );
+                              }),
+                            ),
+
+                          // If all scheduled events for today have concluded
+                          if (activeItems.isEmpty && pastItems.isNotEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 14.w),
+                              margin: EdgeInsets.only(bottom: 14.h),
+                              decoration: BoxDecoration(
+                                color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.04),
+                                borderRadius: BorderRadius.circular(12.r),
+                                border: Border.all(
+                                  color: const Color(0xFFC5A880).withOpacity(0.25),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(7.r),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFA500).withOpacity(0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.check_circle_outline_rounded,
+                                      color: const Color(0xFFFFA500),
+                                      size: 18.sp,
+                                    ),
+                                  ),
+                                  AppSpacing.w10,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'All Caught Up!',
+                                          style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14.sp,
+                                            color: isDarkMode ? Colors.white : Colors.black87,
+                                          ),
+                                        ),
+                                        Text(
+                                          'All scheduled events for today have concluded.',
+                                          style: GoogleFonts.outfit(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 12.sp,
+                                            color: isDarkMode ? Colors.white60 : Colors.black54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
-                              );
-                            }),
-                          ),
+                              ),
+                            ),
+
+                          // 2. Old Passed Events Section (Apple Notification Stack Collapse)
+                          if (pastItems.isNotEmpty) ...[
+                            if (activeItems.isNotEmpty) SizedBox(height: 8.h),
+                            _buildApplePastEventsStack(
+                              context: context,
+                              pastItems: pastItems,
+                              isDarkMode: isDarkMode,
+                            ),
+                          ],
                         ],
                       ),
                     );
@@ -1204,6 +1292,336 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
+  // ===========================================================================
+  // SCHEDULE DATA MODELS & PARSING HELPERS
+  // ===========================================================================
+
+  List<_HomeScheduleItem> _parseAndSortScheduleItems(
+    List<EventModel> rawEvents,
+    DateTime targetDate,
+  ) {
+    final now = DateTime.now();
+    final isToday = targetDate.year == now.year &&
+        targetDate.month == now.month &&
+        targetDate.day == now.day;
+    final isPastDay = DateTime(targetDate.year, targetDate.month, targetDate.day)
+        .isBefore(DateTime(now.year, now.month, now.day));
+    final isFutureDay = DateTime(targetDate.year, targetDate.month, targetDate.day)
+        .isAfter(DateTime(now.year, now.month, now.day));
+
+    final List<_HomeScheduleItem> items = [];
+
+    for (final event in rawEvents) {
+      final start = _parseScheduleTime(targetDate, event.startTime, fallback: event.scheduledDateTime);
+      DateTime end = _parseScheduleTime(targetDate, event.endTime, fallback: start.add(const Duration(hours: 1)));
+      if (end.isBefore(start)) {
+        end = start.add(const Duration(hours: 1));
+      }
+
+      bool isPast = false;
+      bool isPresent = false;
+      bool isFuture = false;
+
+      if (isPastDay) {
+        isPast = true;
+      } else if (isFutureDay) {
+        isFuture = true;
+      } else if (isToday) {
+        if (end.isBefore(now)) {
+          isPast = true;
+        } else if (start.isBefore(now) && end.isAfter(now)) {
+          isPresent = true;
+        } else {
+          isFuture = true;
+        }
+      }
+
+      final period = _getSchedulePeriod(start);
+      final displayTime = _formatScheduleDisplayTime(start, end, event.startTime, event.endTime);
+
+      items.add(
+        _HomeScheduleItem(
+          event: event,
+          startDateTime: start,
+          endDateTime: end,
+          isPast: isPast,
+          isPresent: isPresent,
+          isFuture: isFuture,
+          period: period,
+          displayTime: displayTime,
+        ),
+      );
+    }
+
+    // Sort chronologically ascending
+    items.sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+    return items;
+  }
+
+  DateTime _parseScheduleTime(DateTime baseDate, String? timeStr, {DateTime? fallback}) {
+    if (timeStr == null || timeStr.trim().isEmpty) {
+      return fallback ?? baseDate;
+    }
+    final clean = timeStr.trim();
+
+    // 12-hour AM/PM: e.g. "02:30 PM", "2:30 PM", "9:00 AM"
+    final amPmMatch = RegExp(r'^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM|am|pm)$', caseSensitive: false).firstMatch(clean);
+    if (amPmMatch != null) {
+      int hour = int.tryParse(amPmMatch.group(1)!) ?? 0;
+      final int minute = int.tryParse(amPmMatch.group(2)!) ?? 0;
+      final String period = amPmMatch.group(3)!.toUpperCase();
+      if (period == 'PM' && hour < 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+      return DateTime(baseDate.year, baseDate.month, baseDate.day, hour, minute);
+    }
+
+    // 24-hour military: e.g. "14:30", "09:00", "14:30:00"
+    final militaryMatch = RegExp(r'^(\d{1,2}):(\d{2})').firstMatch(clean);
+    if (militaryMatch != null) {
+      final int hour = int.tryParse(militaryMatch.group(1)!) ?? 0;
+      final int minute = int.tryParse(militaryMatch.group(2)!) ?? 0;
+      return DateTime(baseDate.year, baseDate.month, baseDate.day, hour, minute);
+    }
+
+    // Direct ISO
+    final direct = DateTime.tryParse(clean);
+    if (direct != null) {
+      return DateTime(baseDate.year, baseDate.month, baseDate.day, direct.hour, direct.minute);
+    }
+
+    return fallback ?? baseDate;
+  }
+
+  String _formatScheduleDisplayTime(DateTime start, DateTime end, String rawStart, String rawEnd) {
+    try {
+      final startFmt = DateFormat('h:mm a').format(start);
+      if (rawEnd.trim().isNotEmpty && end.isAfter(start)) {
+        final endFmt = DateFormat('h:mm a').format(end);
+        return '$startFmt - $endFmt';
+      }
+      return startFmt;
+    } catch (_) {
+      if (rawStart.isNotEmpty && rawEnd.isNotEmpty) {
+        return '$rawStart - $rawEnd';
+      }
+      return rawStart.isNotEmpty ? rawStart : 'Scheduled';
+    }
+  }
+
+  String _getSchedulePeriod(DateTime time) {
+    final hour = time.hour;
+    if (hour >= 5 && hour < 12) {
+      return 'Morning';
+    } else if (hour == 12) {
+      return 'Noon';
+    } else if (hour > 12 && hour < 17) {
+      return 'Afternoon';
+    } else if (hour >= 17 && hour < 21) {
+      return 'Evening';
+    } else {
+      return 'Night';
+    }
+  }
+
+  // ===========================================================================
+  // APPLE NOTIFICATION COLLAPSED STACK
+  // ===========================================================================
+
+  Widget _buildApplePastEventsStack({
+    required BuildContext context,
+    required List<_HomeScheduleItem> pastItems,
+    required bool isDarkMode,
+  }) {
+    if (pastItems.isEmpty) return const SizedBox.shrink();
+
+    final int count = pastItems.length;
+    final topEvent = pastItems.last;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Apple-style collapse / expand toggle bar
+        InkWell(
+          onTap: () {
+            setState(() {
+              _isPastEventsExpanded = !_isPastEventsExpanded;
+            });
+          },
+          borderRadius: BorderRadius.circular(12.r),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: 2.w),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? Colors.white.withOpacity(0.06)
+                        : Colors.black.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.08),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.history_toggle_off_rounded,
+                        size: 14.sp,
+                        color: isDarkMode ? AppColors.fourth_color : AppColors.heading_color,
+                      ),
+                      AppSpacing.w6,
+                      Text(
+                        'Earlier Today ($count)',
+                        style: GoogleFonts.outfit(
+                          fontSize: 12.5.sp,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkMode ? AppColors.fourth_color : AppColors.heading_color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  _isPastEventsExpanded ? 'Collapse' : 'Show stack',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFFFFA500),
+                  ),
+                ),
+                AppSpacing.w4,
+                Icon(
+                  _isPastEventsExpanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 18.sp,
+                  color: const Color(0xFFFFA500),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: 10.h),
+
+        // Apple Notification Collapse Deck
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 280),
+          firstCurve: Curves.easeOutCubic,
+          secondCurve: Curves.easeInCubic,
+          crossFadeState: _isPastEventsExpanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          firstChild: GestureDetector(
+            onTap: () {
+              setState(() {
+                _isPastEventsExpanded = true;
+              });
+            },
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.topCenter,
+              children: [
+                // Layer 3 (deepest card peek if 3+ items)
+                if (count >= 3)
+                  Positioned(
+                    bottom: -16.h,
+                    left: 20.w,
+                    right: 20.w,
+                    height: 40.h,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? const Color(0xFF03070E) : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(
+                          color: const Color(0xFFC5A880).withOpacity(0.1),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 4.r,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // Layer 2 (middle card peek if 2+ items)
+                if (count >= 2)
+                  Positioned(
+                    bottom: -8.h,
+                    left: 10.w,
+                    right: 10.w,
+                    height: 40.h,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? const Color(0xFF050B15) : Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(16.r),
+                        border: Border.all(
+                          color: const Color(0xFFC5A880).withOpacity(0.15),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.12),
+                            blurRadius: 4.r,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // Topmost Front Card: the latest finished event
+                _buildScheduleEvent(
+                  context,
+                  topEvent.event.id,
+                  topEvent.event.title,
+                  topEvent.displayTime,
+                  topEvent.event.category_name ?? '',
+                  topEvent.event.location,
+                  topEvent.event.description,
+                  Colors.grey,
+                  isDarkMode,
+                  lightModeBackgroundColor: AppColors.l_schedule_clr1,
+                  isLastItem: true,
+                  isPast: true,
+                  badgeLabel: count > 1 ? '+${count - 1} earlier' : 'Passed',
+                ),
+              ],
+            ),
+          ),
+          secondChild: Column(
+            children: List.generate(pastItems.length, (index) {
+              final item = pastItems[index];
+              final isLast = index == pastItems.length - 1;
+              return _buildScheduleEvent(
+                context,
+                item.event.id,
+                item.event.title,
+                item.displayTime,
+                item.event.category_name ?? '',
+                item.event.location,
+                item.event.description,
+                Colors.grey,
+                isDarkMode,
+                lightModeBackgroundColor: AppColors.l_schedule_clr1,
+                isLastItem: isLast,
+                isPast: true,
+                badgeLabel: 'Passed',
+              );
+            }),
+          ),
+        ),
+        SizedBox(height: _isPastEventsExpanded ? 0 : 20.h),
+      ],
+    );
+  }
+
+  // ===========================================================================
+  // EVENT TILE BUILDER
+  // ===========================================================================
+
   Widget _buildScheduleEvent(
     BuildContext context,
     int id,
@@ -1216,6 +1634,9 @@ class _HomeViewState extends State<HomeView> {
     bool isDarkMode, {
     Color? lightModeBackgroundColor,
     bool isLastItem = false,
+    bool isPast = false,
+    bool isPresent = false,
+    String? badgeLabel,
   }) {
     return IntrinsicHeight(
       child: Row(
@@ -1232,7 +1653,9 @@ class _HomeViewState extends State<HomeView> {
                     bottom: 0,
                     child: Container(
                       width: 1.5.w,
-                      color: const Color(0xFFC5A880).withOpacity(0.35),
+                      color: isPast
+                          ? (isDarkMode ? Colors.white12 : Colors.black12)
+                          : const Color(0xFFC5A880).withOpacity(0.35),
                     ),
                   ),
                 Positioned(
@@ -1245,21 +1668,31 @@ class _HomeViewState extends State<HomeView> {
                         width: 12.w,
                         height: 12.h,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFA500),
+                          color: isPresent
+                              ? const Color(0xFFFFA500)
+                              : isPast
+                                  ? Colors.grey.shade600
+                                  : const Color(0xFFFFA500),
                           shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFFA500).withOpacity(0.4),
-                              blurRadius: 6.r,
-                              spreadRadius: 1.r,
-                            ),
-                          ],
+                          boxShadow: isPast
+                              ? null
+                              : [
+                                  BoxShadow(
+                                    color: isPresent
+                                        ? const Color(0xFFFFA500).withOpacity(0.6)
+                                        : const Color(0xFFFFA500).withOpacity(0.4),
+                                    blurRadius: isPresent ? 8.r : 6.r,
+                                    spreadRadius: isPresent ? 2.r : 1.r,
+                                  ),
+                                ],
                         ),
                       ),
                       Container(
                         width: 6.w,
                         height: 1.5.h,
-                        color: const Color(0xFFC5A880).withOpacity(0.35),
+                        color: isPast
+                            ? (isDarkMode ? Colors.white12 : Colors.black12)
+                            : const Color(0xFFC5A880).withOpacity(0.35),
                       ),
                     ],
                   ),
@@ -1278,17 +1711,28 @@ class _HomeViewState extends State<HomeView> {
                     width: double.infinity,
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: isDarkMode ? const Color(0xFF09121F) : Colors.grey.withOpacity(0.05),
+                      color: isPresent
+                          ? (isDarkMode ? const Color(0xFF0C192E) : const Color(0xFFFFFBF2))
+                          : isPast
+                              ? (isDarkMode ? const Color(0xFF060D18) : Colors.grey.withOpacity(0.04))
+                              : (isDarkMode ? const Color(0xFF09121F) : Colors.grey.withOpacity(0.05)),
                       borderRadius: BorderRadius.circular(16.r),
                       border: Border.all(
-                        color: const Color(0xFFC5A880).withOpacity(0.2),
+                        color: isPresent
+                            ? const Color(0xFFFFA500).withOpacity(0.55)
+                            : isPast
+                                ? (isDarkMode ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06))
+                                : const Color(0xFFC5A880).withOpacity(0.2),
+                        width: isPresent ? 1.2 : 1,
                       ),
-                      image: DecorationImage(
-                        image: AssetImage(
-                          isDarkMode ? ImageAssets.containerBgm : ImageAssets.containerBgmLight,
-                        ),
-                        fit: BoxFit.cover,
-                      ),
+                      image: isPast
+                          ? null
+                          : DecorationImage(
+                              image: AssetImage(
+                                isDarkMode ? ImageAssets.containerBgm : ImageAssets.containerBgmLight,
+                              ),
+                              fit: BoxFit.cover,
+                            ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1297,28 +1741,87 @@ class _HomeViewState extends State<HomeView> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12.w,
-                                  vertical: 4.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.25),
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.15),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12.w,
+                                      vertical: 4.h,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withOpacity(0.25),
+                                      borderRadius: BorderRadius.circular(12.r),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.15),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      category.isEmpty ? 'General' : category,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.outfit(
+                                        color: isPast ? const Color(0xFF5A6B7E) : const Color(0xFF7A8B9E),
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                child: Text(
-                                  category.isEmpty ? 'General' : category,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.outfit(
-                                    color: const Color(0xFF7A8B9E),
-                                    fontSize: 13.sp,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                                  if (isPresent) ...[
+                                    AppSpacing.w6,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFA500).withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(10.r),
+                                        border: Border.all(
+                                          color: const Color(0xFFFFA500).withOpacity(0.6),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 5.w,
+                                            height: 5.h,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFFFA500),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          AppSpacing.w4,
+                                          Text(
+                                            'NOW',
+                                            style: GoogleFonts.outfit(
+                                              fontSize: 10.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFFFFA500),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  if (isPast && badgeLabel != null) ...[
+                                    AppSpacing.w6,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+                                      decoration: BoxDecoration(
+                                        color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(10.r),
+                                      ),
+                                      child: Text(
+                                        badgeLabel,
+                                        style: GoogleFonts.outfit(
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDarkMode ? Colors.white60 : Colors.black45,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                             AppSpacing.w8,
@@ -1326,8 +1829,12 @@ class _HomeViewState extends State<HomeView> {
                               time,
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.w600,
-                                fontSize: 15.sp,
-                                color: const Color(0xFFFFA500),
+                                fontSize: 14.5.sp,
+                                color: isPresent
+                                    ? const Color(0xFFFFA500)
+                                    : isPast
+                                        ? (isDarkMode ? Colors.white54 : Colors.black45)
+                                        : const Color(0xFFFFA500),
                               ),
                             ),
                           ],
@@ -1338,7 +1845,9 @@ class _HomeViewState extends State<HomeView> {
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.bold,
                             fontSize: 18.sp,
-                            color: isDarkMode ? Colors.white : Colors.black,
+                            color: isPast
+                                ? (isDarkMode ? Colors.white60 : Colors.black54)
+                                : (isDarkMode ? Colors.white : Colors.black),
                           ),
                         ),
                         if (location.isNotEmpty && location.toLowerCase() != 'unknown') ...[
@@ -1355,7 +1864,9 @@ class _HomeViewState extends State<HomeView> {
                                   style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.w400,
                                     fontSize: 14.sp,
-                                    color: isDarkMode ? Colors.white70 : Colors.black,
+                                    color: isPast
+                                        ? (isDarkMode ? Colors.white54 : Colors.black54)
+                                        : (isDarkMode ? Colors.white70 : Colors.black),
                                   ),
                                 ),
                               ),
@@ -1368,7 +1879,7 @@ class _HomeViewState extends State<HomeView> {
                             children: [
                               Icon(
                                 Icons.description_outlined,
-                                color: const Color(0xFF7A8B9E),
+                                color: isPast ? const Color(0xFF5A6B7E) : const Color(0xFF7A8B9E),
                                 size: 14.sp,
                               ),
                               AppSpacing.w6,
@@ -1380,7 +1891,9 @@ class _HomeViewState extends State<HomeView> {
                                   style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.w400,
                                     fontSize: 14.sp,
-                                    color: isDarkMode ? Colors.white60 : Colors.black54,
+                                    color: isPast
+                                        ? (isDarkMode ? Colors.white38 : Colors.black38)
+                                        : (isDarkMode ? Colors.white60 : Colors.black54),
                                   ),
                                 ),
                               ),
@@ -1420,4 +1933,27 @@ class _HomeViewState extends State<HomeView> {
         return '';
     }
   }
+}
+
+/// Helper model for parsed, validated, and chronologically sorted schedule items
+class _HomeScheduleItem {
+  final EventModel event;
+  final DateTime startDateTime;
+  final DateTime endDateTime;
+  final bool isPast;
+  final bool isPresent;
+  final bool isFuture;
+  final String period;
+  final String displayTime;
+
+  const _HomeScheduleItem({
+    required this.event,
+    required this.startDateTime,
+    required this.endDateTime,
+    required this.isPast,
+    required this.isPresent,
+    required this.isFuture,
+    required this.period,
+    required this.displayTime,
+  });
 }

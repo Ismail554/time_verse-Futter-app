@@ -95,14 +95,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         value: controller.notificationVolume,
                         icon: Icons.volume_down_outlined,
                         onChanged: controller.setNotificationVolume,
-                        onChangeEnd: (val) {
-                          if (val > 0.02) {
-                            controller.previewAlarmSound(
-                              volumeOverride: val,
-                              durationMs: 1500,
-                            );
-                          }
-                        },
+                        onChangeEnd: controller.commitNotificationVolumeAndPreview,
                       ),
                       AppSpacing.h12,
                       _buildSliderTile(

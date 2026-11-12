@@ -8,11 +8,73 @@ class AppPrefs {
   static const _savedPasswordKey = 'saved_password';
   static const _isGoogleLoginKey = 'is_google_login';
 
+  static const _userIdKey = 'user_id';
+  static const _userNameKey = 'user_name';
+  static const _userEmailKey = 'user_email';
+  static const _userPhotoKey = 'user_photo';
+
   static const _googleUserNameKey = 'google_user_name';
   static const _googleUserEmailKey = 'google_user_email';
   static const _googleUserPhotoKey = 'google_user_photo';
 
   static const String _keyLastMoodTrackerDate = 'last_mood_tracker_date';
+
+  /// Primary User Session Persistence
+  static Future<void> saveUserSession({
+    required String userId,
+    required String userName,
+    required String email,
+    String? photoUrl,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userIdKey, userId);
+    await prefs.setString(_userNameKey, userName);
+    await prefs.setString(_userEmailKey, email);
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      await prefs.setString(_userPhotoKey, photoUrl);
+    }
+  }
+
+  static Future<void> saveUserId(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userIdKey, userId);
+  }
+
+  static Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userIdKey);
+  }
+
+  static Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userNameKey);
+  }
+
+  static Future<String?> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userEmailKey);
+  }
+
+  static Future<String?> getUserPhoto() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userPhotoKey);
+  }
+
+  /// Complete user data and storage purge on logout
+  static Future<void> clearAllUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_isLoggedInKey, false);
+    await prefs.setBool(_isGoogleLoginKey, false);
+    await prefs.remove(_userIdKey);
+    await prefs.remove(_userNameKey);
+    await prefs.remove(_userEmailKey);
+    await prefs.remove(_userPhotoKey);
+    await prefs.remove(_googleUserNameKey);
+    await prefs.remove(_googleUserEmailKey);
+    await prefs.remove(_googleUserPhotoKey);
+    await prefs.remove('google_token');
+    await prefs.remove('pending_event_queue');
+  }
 
   /// Login persistence
   static Future<void> setLoggedIn(bool value) async {

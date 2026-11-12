@@ -2,9 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:time_verse/config/services/alerm_notification_service.dart';
 import 'package:time_verse/config/services/alerm_service.dart';
+import 'package:time_verse/features/calender/controller/time_controller.dart';
 import 'package:time_verse/features/calender/repository/event_detail_utils.dart';
 import 'package:time_verse/features/edit_event/model/edit_event_model.dart';
 import 'package:time_verse/features/edit_event/repository/edit_event_repo.dart';
@@ -176,10 +177,23 @@ class EditEventController extends ChangeNotifier {
     // 2. Clean times and calculate ISO string matching AddEvent logic
     final start = _cleanTimeStr(effectiveStart);
     final end = _cleanTimeStr(effectiveEnd);
-    final calculatedAlarmTime = _calculateAlarmOffset(
-      start,
-      activeReminder.trim(),
-    );
+
+    TimeOfDay? customAlarm;
+    try {
+      customAlarm = context.read<TimePickerController>().customAlarmTimeOfDay;
+    } catch (_) {}
+
+    final String calculatedAlarmTime;
+    if (customAlarm != null) {
+      final dt = DateTime(0, 1, 1, customAlarm.hour, customAlarm.minute);
+      calculatedAlarmTime = DateFormat('HH:mm:ss').format(dt);
+    } else {
+      calculatedAlarmTime = _calculateAlarmOffset(
+        start,
+        activeReminder.trim(),
+      );
+    }
+
     final formattedAlarmISO = _formatAlarmISO(
       dateController.text,
       calculatedAlarmTime,
@@ -222,33 +236,14 @@ class EditEventController extends ChangeNotifier {
         debugPrint("⚠️ Error canceling previous alarms for event $eventId: $e");
       }
 
-      // 2. Schedule updated alarm or fallback notification
-      final prefs = await SharedPreferences.getInstance();
-      final allowAlarms = prefs.getBool('notif_allow_alarms') ?? true;
-      final allowNotifs = prefs.getBool('notif_allow_notifications') ?? true;
-
+      // 2. Schedule updated alarm or fallback notification (including repeating occurrences)
       try {
         final alarmTimeStr =
             resultMap['alarm_time']?.toString() ?? formattedAlarmISO;
-        if (allowAlarms) {
-          await AlarmHelper.scheduleEventAlarm(
-            context,
-            updatedData.toEventModel(overrideAlarmTime: alarmTimeStr),
-          );
-        } else if (allowNotifs) {
-          final alarmDateTime =
-              EventDateTimeUtils.parseAlarmIsoToLocal(alarmTimeStr);
-          if (alarmDateTime != null) {
-            final notifId = AlarmHelper.computeNotificationId(parsedEventId, 0);
-            await NotificationService.scheduleNotification(
-              id: notifId,
-              title: updatedData.title ?? '',
-              body: updatedData.note ?? '',
-              alarmTime: alarmDateTime,
-              payload: updatedData.id ?? '',
-            );
-          }
-        }
+        await AlarmHelper.scheduleEventAlarm(
+          context,
+          updatedData.toEventModel(overrideAlarmTime: alarmTimeStr),
+        );
       } catch (e) {
         debugPrint("⚠️ Alarm/Notification scheduling error: $e");
       }

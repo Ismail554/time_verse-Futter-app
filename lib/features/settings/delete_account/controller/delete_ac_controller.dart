@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import 'package:time_verse/config/app_route/app_prefernce.dart';
 import 'package:time_verse/config/services/alerm_notification_service.dart';
 import 'package:time_verse/config/services/alerm_service.dart';
 import 'package:time_verse/config/services/google_service.dart';
+import 'package:time_verse/config/services/user_session.dart';
 import 'package:time_verse/core/components/custom_dialogue.dart';
 import 'package:time_verse/core/network/network.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
@@ -50,10 +52,13 @@ class DeleteAcController extends ChangeNotifier {
       await AlarmHelper.cancelAllAlarms();
       await NotificationService.cancelAllNotifications();
       await GoogleServices().signOut();
-      await AppPrefs.setLoggedIn(false);
-      await AppPrefs.setGoogleLogin(false);
-      await AppPrefs.clearGoogleToken();
+      await AppPrefs.clearAllUserData();
       await AuthService().clearToken();
+      UserSession().clear();
+
+      try {
+        await FirebaseMessaging.instance.deleteToken();
+      } catch (_) {}
 
       if (!context.mounted) return;
       context.read<HomeController>().resetSession();

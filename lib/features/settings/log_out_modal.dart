@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -10,6 +11,7 @@ import 'package:time_verse/config/app_route/app_prefernce.dart';
 import 'package:time_verse/config/services/alerm_notification_service.dart';
 import 'package:time_verse/config/services/alerm_service.dart';
 import 'package:time_verse/config/services/google_service.dart';
+import 'package:time_verse/config/services/user_session.dart';
 import 'package:time_verse/core/utils/app_spacing.dart';
 import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/core/utils/colors.dart';
@@ -99,10 +101,13 @@ void showLogoutDialog(BuildContext context) {
                         await AlarmHelper.cancelAllAlarms();
                         await NotificationService.cancelAllNotifications();
                         await GoogleServices().signOut();
-                        await AppPrefs.setLoggedIn(false);
-                        await AppPrefs.setGoogleLogin(false);
-                        await AppPrefs.clearGoogleToken();
+                        await AppPrefs.clearAllUserData();
                         await AuthService().clearToken();
+                        UserSession().clear();
+
+                        try {
+                          await FirebaseMessaging.instance.deleteToken();
+                        } catch (_) {}
 
                         if (context.mounted) {
                           context.read<HomeController>().resetSession();

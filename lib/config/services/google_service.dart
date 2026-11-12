@@ -21,6 +21,15 @@ class GoogleServices {
   String? _accessToken;
   String? get accessToken => _accessToken;
 
+  /// Dedicated unintercepted Dio client for external Google Calendar APIs
+  /// to prevent token collision with Django backend JWT interceptor.
+  final Dio _googleDio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+    ),
+  );
+
   final List<String> scopes = [
     'email',
     'profile',
@@ -319,7 +328,7 @@ class GoogleServices {
     };
 
     try {
-      final dio = createDio();
+      final dio = _googleDio;
       final response = await dio.post(
         "https://www.googleapis.com/calendar/v3/calendars/primary/events",
         data: body,
@@ -344,7 +353,7 @@ class GoogleServices {
     DateTime? timeMin,
     DateTime? timeMax,
   }) async {
-    final dio = createDio();
+    final dio = _googleDio;
     final startStr = (timeMin ?? DateTime.now()).toUtc().toIso8601String();
 
     Map<String, dynamic> queryParameters = {
@@ -420,7 +429,7 @@ class GoogleServices {
     required String accessToken,
     required String eventId,
   }) async {
-    final dio = createDio();
+    final dio = _googleDio;
     try {
       final response = await dio.delete(
         "https://www.googleapis.com/calendar/v3/calendars/primary/events/$eventId",

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:time_verse/config/app_route/app_prefernce.dart';
+import 'package:time_verse/config/services/user_session.dart';
 import 'package:time_verse/core/utils/asset_manager.dart';
 import 'package:time_verse/features/auth/auth_service/auth_service.dart';
 
@@ -40,14 +41,16 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (hasValidSession) {
+      await UserSession().initFromPrefs();
+      if (!mounted) return;
       context.go('/home');
     } else {
       // Clear expired or invalid session state
       await authService.clearToken();
-      await AppPrefs.setLoggedIn(false);
-      await AppPrefs.setGoogleLogin(false);
-      await AppPrefs.clearGoogleToken();
+      await AppPrefs.clearAllUserData();
+      UserSession().clear();
 
+      if (!mounted) return;
       context.go('/login');
     }
   }

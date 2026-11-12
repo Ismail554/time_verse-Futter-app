@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:time_verse/config/app_route/app_prefernce.dart';
+import 'package:time_verse/config/services/user_session.dart';
 import 'package:time_verse/core/network/network.dart';
 import 'package:time_verse/features/auth/auth_model/auth_model.dart';
 
@@ -26,6 +28,9 @@ class AuthService {
   }
 
   // ---------------- TOKEN HANDLING ---------------- //
+  static Completer<String?>? _refreshCompleter;
+  static VoidCallback? onSessionExpired;
+
   Future<void> saveToken(String token, [String? refreshToken]) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('access_token', token);
@@ -53,11 +58,31 @@ class AuthService {
 
   /// Automatically refreshes the short-lived 15-minute JWT access token
   /// using the 30-day refresh token via POST /api/v1/token/refresh/.
-  Future<String?> refreshAccessToken() async {
+  /// Uses a shared static Completer mutex to prevent concurrent refresh storms
+  /// and token rotation collisions.
+  Future<String?> refreshAccessToken({String? failedToken}) async {
+    // 1. If another request already refreshed the token, return the new token immediately
+    if (failedToken != null && failedToken.trim().isNotEmpty) {
+      final currentStored = await getToken();
+      if (currentStored != null && currentStored.trim().isNotEmpty && currentStored.trim() != failedToken.trim()) {
+        debugPrint('🔄 Token was already refreshed by a concurrent request. Reusing new token.');
+        return currentStored;
+      }
+    }
+
+    // 2. If a refresh is already in flight, wait for its completion
+    if (_refreshCompleter != null) {
+      debugPrint('⏳ Refresh already in flight. Waiting for existing refresh to complete...');
+      return await _refreshCompleter!.future;
+    }
+
+    _refreshCompleter = Completer<String?>();
+
     try {
       final refreshToken = await getRefreshToken();
       if (refreshToken == null || refreshToken.trim().isEmpty) {
         debugPrint('⚠️ No refresh token available in storage.');
+        _refreshCompleter?.complete(null);
         return null;
       }
 
@@ -65,6 +90,8 @@ class AuthService {
         debugPrint('⚠️ Stored refresh token is expired.');
         await clearToken();
         await AppPrefs.setLoggedIn(false);
+        onSessionExpired?.call();
+        _refreshCompleter?.complete(null);
         return null;
       }
 
@@ -89,17 +116,24 @@ class AuthService {
         if (newAccess != null && newAccess.isNotEmpty) {
           await saveToken(newAccess, newRefresh);
           debugPrint('🔄 Access token successfully refreshed and rotated.');
+          _refreshCompleter?.complete(newAccess);
           return newAccess;
         }
       }
+      _refreshCompleter?.complete(null);
       return null;
     } catch (e) {
       debugPrint('❌ Error refreshing token: $e');
       if (e is DioException && (e.response?.statusCode == 401 || e.response?.statusCode == 403)) {
+        debugPrint('🚨 Refresh token invalidated/expired. Purging session.');
         await clearToken();
         await AppPrefs.setLoggedIn(false);
+        onSessionExpired?.call();
       }
+      _refreshCompleter?.complete(null);
       return null;
+    } finally {
+      _refreshCompleter = null;
     }
   }
 
@@ -186,6 +220,23 @@ class AuthService {
             ? User.fromJson(normalizedData['data']['user'])
             : null;
 
+        final rawUserId = user?.id ?? await getUserIdFromToken();
+        final rawUserName = user?.name ?? '';
+        final rawUserEmail = user?.email ?? email;
+        final rawPhoto = user?.profilePicture;
+
+        if (rawUserId != null) {
+          await AppPrefs.saveUserSession(
+            userId: rawUserId.toString(),
+            userName: rawUserName,
+            email: rawUserEmail,
+            photoUrl: rawPhoto,
+          );
+          UserSession().userId = rawUserId.toString();
+          UserSession().username = rawUserName;
+          UserSession().profileImageUrl = rawPhoto;
+        }
+
         return {
           'success': true,
           'data': {
@@ -218,17 +269,19 @@ class AuthService {
     debugPrint("Image path: $profileImagePath");
 
     try {
-      FormData formData = FormData.fromMap({
+      final hasImage =
+          profileImagePath != null && profileImagePath.trim().isNotEmpty;
+      final FormData formData = FormData.fromMap({
         'email': email,
         'password': password,
         'first_name': firstName,
         'last_name': lastName,
         'gender': gender,
         'nationality': nationality,
-        if (profileImagePath != null)
+        if (hasImage)
           'profile_picture': await MultipartFile.fromFile(
-            profileImagePath,
-            filename: profileImagePath.split('/').last,
+            profileImagePath.trim(),
+            filename: profileImagePath.trim().split(RegExp(r'[\\/]')).last,
           ),
       });
 
@@ -236,7 +289,8 @@ class AuthService {
         'api/v1/register/',
         data: formData,
         options: Options(
-          contentType: 'multipart/form-data',
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
         ),
       );
 

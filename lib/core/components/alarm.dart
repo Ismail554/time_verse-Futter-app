@@ -87,9 +87,14 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen>
         'isRinging': true,
       });
 
+      final prefs = await SharedPreferences.getInstance();
+      final shouldVibrate = prefs.getBool('notif_vibrate') ?? true;
+      if (!shouldVibrate) {
+        await _ringtoneChannel.invokeMethod('cancelVibration');
+      }
+
       // Only engage native MediaPlayer fallback if a content:// URI could not be copied locally
       if (await AlarmHelper.requiresNativeUriPlayerFallback()) {
-        final prefs = await SharedPreferences.getInstance();
         final uri = prefs.getString('alarm_selected_ringtone') ?? '';
         final volume = prefs.getDouble('alarm_volume') ?? 1.0;
         await _ringtoneChannel.invokeMethod('playRingtone', {
@@ -115,8 +120,10 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen>
     _isActionInProgress = true;
     int snoozeMinutes = 5;
     try {
-      HapticFeedback.mediumImpact();
       final notifController = context.read<NotificationSettingsController>();
+      if (notifController.vibrate) {
+        HapticFeedback.mediumImpact();
+      }
       snoozeMinutes = notifController.snoozeDurationMinutes;
       await AlarmHelper.snoozeAlarm(widget.alarmSettings, snoozeMinutes);
       if (mounted) {
@@ -147,7 +154,10 @@ class _ExampleAlarmRingScreenState extends State<ExampleAlarmRingScreen>
     if (_isActionInProgress) return;
     _isActionInProgress = true;
     try {
-      HapticFeedback.heavyImpact();
+      final notifController = context.read<NotificationSettingsController>();
+      if (notifController.vibrate) {
+        HapticFeedback.heavyImpact();
+      }
       await AlarmHelper.dismissAlarm(widget.alarmSettings.id);
     } catch (e) {
       debugPrint('⚠️ Error during stop: $e');
